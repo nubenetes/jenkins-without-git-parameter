@@ -42,6 +42,7 @@
   - [1. Comprehensive Comparison Matrix: Jenkins Git Parameter vs. Pure GitOps](#1-comprehensive-comparison-matrix-jenkins-git-parameter-vs-pure-gitops)
   - [2. The Root Cause of Jenkins SCM Friction (Why Git Parameter Fails at Scale)](#2-the-root-cause-of-jenkins-scm-friction-why-git-parameter-fails-at-scale)
   - [3. How Git & ArgoCD Solve Parameterization Natively](#3-how-git--argocd-solve-parameterization-natively)
+  - [4. Why There is No 'jenkins-without-git-parameter-global-vars' Repository (Architectural Rationale)](#4-why-there-is-no-jenkins-without-git-parameter-global-vars-repository-architectural-rationale)
 - [Comprehensive Mermaid Architecture Diagrams & Workflows](#comprehensive-mermaid-architecture-diagrams--workflows)
   - [1. End-to-End Multi-Cluster Platform Topology](#1-end-to-end-multi-cluster-platform-topology)
   - [2. Jenkins SCM Pre-Execution Lifecycle Blindspot](#2-jenkins-scm-pre-execution-lifecycle-blindspot)
@@ -151,6 +152,84 @@ By transitioning to the **Pure GitOps pattern (`jenkins-without-git-parameter`)*
 │                                      │ or opens a Promotion PR across environment files. │
 └──────────────────────────────────────┴───────────────────────────────────────────────────┘
 ```
+
+---
+
+### 4. Why There is No `jenkins-without-git-parameter-global-vars` Repository (Architectural Rationale)
+
+A frequent question when transitioning from the legacy `jenkins-git-parameter` pattern to pure GitOps is: **"Why is there no `jenkins-without-git-parameter-global-vars` repository?"**
+
+<details>
+<summary>🌐 <b>Click to expand: Legacy Global-Vars vs. Pure GitOps Repository Topology Diagram</b></summary>
+<br/>
+
+```mermaid
+flowchart TB
+    subgraph LegacyModel["1. Legacy Push Model (jenkins-git-parameter)"]
+        direction TB
+        AppRepo1["📦 app-repo"]
+        GlobalVars1["🌐 jenkins-git-parameter-global-vars<br/>(Created for Jenkins UI Dropdown)"]
+        Jenkins1["⚙️ Jenkins Master<br/>• Dropdown 1: App Branch<br/>• Dropdown 2: Global Vars Tag"]
+        Cluster1["☸️ Target Clusters"]
+
+        AppRepo1 --> Jenkins1
+        GlobalVars1 --> Jenkins1
+        Jenkins1 -->|Imperative Push Deploy| Cluster1
+    end
+
+    subgraph GitOpsModel["2. Pure GitOps Model (jenkins-without-git-parameter)"]
+        direction TB
+        AppRepo2["📦 app-repo"]
+        Jenkins2["🏗️ Jenkins CI (Lean)<br/>• Builds image<br/>• Signs (Cosign SLSA 3)<br/>• Auto-commits image tag"]
+        GitOpsRepo["🌐 GitOps Repo (ArgoCD SSOT)<br/>• clusters.yaml<br/>• overlays/ (dev, staging, prod)"]
+        ArgoCD["🐙 ArgoCD 3.5 Controller"]
+        Cluster2["☸️ Target Clusters"]
+
+        AppRepo2 -->|Webhook on Push| Jenkins2
+        Jenkins2 -->|Auto-commits tag| GitOpsRepo
+        GitOpsRepo -->|Continuous Pull & Reconcile| ArgoCD
+        ArgoCD -->|Declarative Sync| Cluster2
+    end
+```
+
+</details>
+
+#### The 4 Core Architectural Reasons Why `*-global-vars` is Obsolete
+
+1. **Jenkins No Longer Has UI Dropdowns for Deployment**:
+   * In `jenkins-git-parameter`, the user opened the Jenkins Web UI form and selected two dropdown parameters: `APP_REVISION` (microservice branch) and `GLOBAL_VARS_REVISION` (environment config branch/tag).
+   * In `jenkins-without-git-parameter`, Jenkins CI runs 100% automated via webhooks. It builds and tests the commit, pushes the container image, and writes the new image tag to Git. **There is no human in Jenkins selecting a configuration version**, so Jenkins has no need for a dedicated configuration dropdown repo.
+2. **Configuration Belongs to ArgoCD (GitOps), Not to Jenkins**:
+   * In pure GitOps, environment definitions, cluster inventories, and Helm/Kustomize values belong to the **GitOps Control Plane (ArgoCD)**.
+   * Naming a configuration repository `jenkins-*-global-vars` is an anti-pattern in modern cloud-native architectures because **Jenkins does not own the cluster state—ArgoCD and Git own it**.
+3. **Elimination of the SCM Multi-Remote Workaround**:
+   * In Jenkins, querying two git repositories in a single declarative pipeline required complex Job DSL refspec workarounds (`origin-app`, `origin-vars`).
+   * In Pure GitOps, this problem completely vanishes. Application source code and deployment manifests are decoupled by design.
+4. **Self-Contained GitOps Structure**:
+   * All cluster definitions (`config/clusters.yaml`), environment overlays (`sample-apps/gitops-manifests/environments/`), and application definitions (`argocd-apps/`) are cleanly organized within standard GitOps structures without requiring Jenkins-specific bindings.
+
+#### ⚖️ Legacy `global-vars` vs. Pure GitOps Manifests
+
+| Feature | Legacy `jenkins-git-parameter-global-vars` | GitOps Manifests (`jenkins-without-git-parameter`) |
+| :--- | :--- | :--- |
+| **Primary Consumer** | **Jenkins Master** (queries refs for UI dropdown). | **ArgoCD 3.5** (reconciles cluster state continuously). |
+| **Parameter Mechanism** | Jenkins `gitParameter` plugin & Active Choices. | Git branches, release tags (`v1.2.0`), or PRs. |
+| **Who Modifies It?** | Developers manually via Jenkins UI inputs. | **Automated Bot**: Jenkins CI auto-commits image tags on merge. |
+| **Drift Detection** | None (Jenkins cannot detect cluster drift). | **Continuous**: ArgoCD self-heals any divergence from Git. |
+| **Repo Maintenance** | High (must synchronize Jenkins credentials & SCM). | Low (Standard Git repository tracked by ArgoCD). |
+
+#### 🏢 GitOps Repository Topology Options in Production
+
+If your organization prefers separating the platform IaC from workload manifests, there are two standard topologies:
+
+1. **Platform Monorepo (Current Repository)**:
+   * Everything (Helm charts, JCasC, ArgoCD ApplicationSets, and sample GitOps manifests) lives in [`jenkins-without-git-parameter`](https://github.com/nubenetes/jenkins-without-git-parameter).
+   * **Best for**: 1-click deployment, self-contained demos, and small-to-medium platforms.
+2. **Enterprise Multi-Repo (Polyrepo GitOps)**:
+   * `app-repo` (e.g., `jhipster-microservice`): Developer source code + Dockerfile.
+   * `ci-platform-repo` (`jenkins-without-git-parameter`): Jenkins JCasC, Helm values, and Job DSL.
+   * `gitops-manifests-repo` (e.g., `nubenetes/gitops-manifests`): Pure Kubernetes/ArgoCD environment overlays (`dev`, `staging`, `prod`).
+   * Notice that even in a polyrepo setup, the repository is named **`gitops-manifests`**, never `jenkins-global-vars`, because it is managed by **ArgoCD**, not Jenkins.
 
 ---
 
