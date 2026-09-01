@@ -375,9 +375,9 @@ flowchart TB
     JenkinsAgent -->|Pushes Artifacts & Signatures| Registry
     JenkinsAgent -->|Commits Image Digest via GitHub App| GitRepo
     
-    JenkinsAgent -.x|BLOCKED: No Direct Cluster Access| DEV
-    JenkinsAgent -.x|BLOCKED: No Direct Cluster Access| STG
-    JenkinsAgent -.x|BLOCKED: No Direct Cluster Access| PRD
+    JenkinsAgent -.->|"⛔ BLOCKED: No Direct Access"| DEV
+    JenkinsAgent -.->|"⛔ BLOCKED: No Direct Access"| STG
+    JenkinsAgent -.->|"⛔ BLOCKED: No Direct Access"| PRD
 
     GitRepo -->|Continuous Reconciliation| ArgoCD
     ArgoCD -->|Reconciles State via SA Token| DEV
