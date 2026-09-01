@@ -130,56 +130,74 @@ This repository provides the complete, production-ready **Infrastructure as Code
 
 ## In-Depth Architectural Comparison: Push vs. Pull Model
 
-### 0. The Core Nuance: Jenkins as a Parameter Proxy vs. Native Git & ArgoCD Selection
+### 0. The Architectural Evolution: From Two-Pipeline CI/CD Hand-off to Pure GitOps
 
 > [!IMPORTANT]
-> **Understanding the Hybrid Role of ArgoCD in Both Patterns**
-> 
-> * In [`jenkins-git-parameter`](https://github.com/nubenetes/jenkins-git-parameter), ArgoCD was **already used** to synchronize the clusters. However, **Jenkins was acting as a manual Parameter Proxy**: developers had to open the Jenkins UI, use the `git-parameter` plugin dropdown to choose the application branch/tag and global configuration revision, and Jenkins executed a pipeline that committed the change to the GitOps repository before invoking ArgoCD.
-> * In [`jenkins-without-git-parameter`](https://github.com/nubenetes/jenkins-without-git-parameter), **Jenkins is completely removed from the parameter selection and release decision loop**. Developers select parameters **directly in Git (PRs, Git tags, merge events)** or **natively in ArgoCD (ApplicationSets & `targetRevision`)**, and Jenkins acts purely as an automated, parameterless Continuous Integration (CI) build-and-test engine.
+> **Context & Heritage: The Patterns in `jenkins-git-parameter` vs. Pure GitOps**
+>
+> In the baseline repository [`jenkins-git-parameter`](https://github.com/nubenetes/jenkins-git-parameter), we investigated and delivered two core Jenkins push patterns for multi-repository environments:
+> 1. **Pattern 1: Dual Git Parameter Dropdowns in a Single Pipeline (Multi-Remote SCM)**:  
+>    Configured both the application code repo and `jenkins-git-parameter-global-vars` inside a single `Job DSL` definition using custom refspecs (`origin-app` and `origin-vars`). While functional, it suffered from SCM namespace collisions, Jenkins master UI render latency, and workspace checkout quirks.
+> 2. **Pattern 2: Decoupled Two-Pipeline Architecture (CI ➔ CD Hand-off) [RECOMMENDED in `jenkins-git-parameter`]**:  
+>    Separated artifact creation from release promotion:
+>    * **Pipeline 01 (`01-CI-Build-Pipelines/*-ci-build`)**: Bound to the application code repo with an `APP_GIT_REVISION` dropdown. Built the container image once, ran tests, and passed the image tag downstream.
+>    * **Pipeline 02 (`02-CD-Release-Orchestrators/multi-cluster-release-orchestrator`)**: Bound directly to `jenkins-git-parameter-global-vars` with its own `GLOBAL_VARS_REVISION` dropdown (`DEV`, `STAGING`, `PROD`). Orchestrated multi-cluster image promotion (via Skopeo), committed updated tags to GitOps manifests, and invoked `argoAppSync`.
+>
+> While **Pattern 2 was the best possible design within the Jenkins Push Paradigm** (honoring Single Responsibility Principle and "Build Once, Deploy Anywhere"), it still kept **Jenkins as the manual Parameter Proxy, release coordinator, and credential holder** in Pipeline 02.
+>
+> In **[`jenkins-without-git-parameter`](https://github.com/nubenetes/jenkins-without-git-parameter) (This Repository)**, we take the architectural evolution to its ultimate cloud-native conclusion:
+> * **Pipeline 02 is completely eliminated from Jenkins**: ArgoCD 3.5 natively performs all continuous delivery, drift detection, and multi-cluster reconciliation directly from Git.
+> * **Pipeline 01 becomes a parameterless, webhook-driven CI engine**: Developers never interact with Jenkins UI dropdowns; pushing code or opening PRs automatically builds, scans (Trivy), generates SBOM (Syft), signs (Cosign SLSA 3), and commits the image tag to GitOps.
+> * **Release selection is native to Git & ArgoCD**: Handled via Git PRs, Semantic Version tags (`v1.2.0`), or ArgoCD's native `targetRevision` UI/CLI.
 
 <details>
-<summary>🔄 <b>Click to expand: Parameter Flow Comparison Diagram (Jenkins Proxy vs. Pure GitOps)</b></summary>
+<summary>🔄 <b>Click to expand: Three-Way Architectural Evolution Diagram (Pattern 1 vs. Pattern 2 vs. Pure GitOps)</b></summary>
 <br/>
 
 ```mermaid
 flowchart TB
-    subgraph Pattern1["Pattern 1: Jenkins Parameter Proxy (jenkins-git-parameter)"]
+    subgraph P1["Pattern 1: Monolithic Dual Dropdown (jenkins-git-parameter)"]
         direction TB
-        Dev1["👩‍💻 Developer"] -->|"1. Opens Jenkins UI"| JenkinsUI["📋 Jenkins Job Form<br/>(gitParameter Dropdowns)"]
-        JenkinsUI -->|"2. Queries Remote Refs"| SCMQuery["🔍 Jenkins Master SCM Query<br/>(origin-app & origin-vars)"]
-        SCMQuery -->|"3. Triggers Build"| JenkinsAgent1["⚙️ Ephemeral Agent Pod<br/>(Maven Builder)"]
-        JenkinsAgent1 -->|"4. Builds & Pushes Image"| Reg1["🐳 Container Registry<br/>(Internal Dev Registry)"]
-        JenkinsAgent1 -->|"5. Commits to GitOps Repo"| GitOps1["🌐 GitOps Repo<br/>(jenkins-*-global-vars)"]
-        JenkinsAgent1 -->|"6. Calls argoAppSync"| Argo1["🐙 ArgoCD 3.5 Controller<br/>(Triggers Sync)"]
-        Argo1 -->|"7. Reconciles State"| Cluster1["☸️ OpenShift Cluster<br/>(DEV / STG / PROD)"]
+        Dev1["👩‍💻 User"] -->|"1. Selects App & Vars Dropdowns"| JJob1["📋 Single Pipeline<br/>(Multi-Remote SCM origin-app & origin-vars)"]
+        JJob1 -->|"2. Builds & Deploys"| Agent1["⚙️ Jenkins Agent<br/>(Holds Cluster Secrets)"]
+        Agent1 -->|"3. Imperative Push"| K8s1["☸️ OpenShift Clusters"]
     end
 
-    subgraph Pattern2["Pattern 2: Pure GitOps Native Selection (jenkins-without-git-parameter)"]
+    subgraph P2["Pattern 2: Decoupled CI ➔ CD Hand-off (jenkins-git-parameter Recommended)"]
         direction TB
-        Dev2["👩‍💻 Developer"] -->|"1. Git PR / Release Tag"| Git2["🐙 Git Repository (SSOT)<br/>(App Code & GitOps)"]
-        Git2 -.->|"2. Webhook Event"| JenkinsCI["🏗️ Lean Jenkins CI<br/>(Multibranch Webhook)"]
-        JenkinsCI -->|"3. Build, Scan & Sign"| JenkinsCI
-        JenkinsCI -->|"4. Pushes Signed Image"| Reg2["🐳 Container Registry<br/>(SLSA Level 3)"]
-        JenkinsCI -->|"5. Auto-Commits Tag"| GitOps2["🌐 GitOps Manifests<br/>(Overlays & Clusters)"]
-        
-        GitOps2 -->|"6. Native targetRevision"| Argo2["🐙 ArgoCD 3.5 Controller<br/>(ApplicationSets)"]
-        Argo2 -->|"7. Self-Healing Sync"| Cluster2["☸️ OpenShift Cluster<br/>(DEV / STG / PROD)"]
-        
-        Dev2 -.->|"Optional: Direct Revision Override"| Argo2
+        Dev2["👩‍💻 User"] -->|"1. Selects App Branch"| CI2["🏗️ Pipeline 01: CI Build<br/>(APP_GIT_REVISION Dropdown)"]
+        CI2 -->|"2. Builds Image Once"| Reg2["🐳 Container Registry"]
+        CI2 -->|"3. Triggers Downstream"| CD2["🚀 Pipeline 02: CD Orchestrator<br/>(GLOBAL_VARS_REVISION Dropdown)"]
+        CD2 -->|"4. Skopeo Promote & Git Commit"| GitOps2["🌐 GitOps Repo (global-vars)"]
+        CD2 -->|"5. Calls argoAppSync"| Argo2["🐙 ArgoCD Controller"]
+        Argo2 -->|"6. Syncs Cluster"| K8s2["☸️ OpenShift Clusters"]
+    end
+
+    subgraph P3["Pattern 3: Pure GitOps Event-Driven Pull (This Repository - Recommended)"]
+        direction TB
+        Dev3["👩‍💻 Developer"] -->|"1. Git PR / Release Tag"| Git3["🐙 Git Repository (SSOT)<br/>(App Code & GitOps Overlays)"]
+        Git3 -.->|"2. Webhook Event"| CI3["🏗️ Lean Jenkins CI<br/>(Zero UI Parameters / Multibranch)"]
+        CI3 -->|"3. Build, Scan & Sign (SLSA 3)"| Reg3["🐳 Container Registry"]
+        CI3 -->|"4. Auto-commits Image Tag"| Git3
+        Git3 -->|"5. Continuous Pull & Reconcile"| Argo3["🐙 ArgoCD 3.5 Controller<br/>(Native targetRevision & AppSets)"]
+        Argo3 -->|"6. Self-Healing Sync"| K8s3["☸️ OpenShift Clusters<br/>(Zero Cluster Secrets in Jenkins)"]
     end
 ```
 
 </details>
 
-#### Why Removing Jenkins as the Parameter Proxy is Superior
+#### 📊 Three-Way Architecture Comparison Matrix
 
-1. **Elimination of Jenkins SCM Query Bottlenecks**:
-   In Pattern 1, the Jenkins Master had to perform remote Git network calls every time a developer loaded the job page in their browser. For large repositories or high-concurrency environments, this causes UI lag, rate limiting, and SCM timeout errors.
-2. **True Event-Driven Automation**:
-   In Pattern 2, developers never "run a job" in Jenkins. Pushing code or opening a PR automatically produces tested, signed artifacts and updates GitOps manifests.
-3. **Decoupled Responsibilities**:
-   CI (Jenkins) only cares about **validating code and producing immutable signed artifacts**. CD (ArgoCD) only cares about **reconciling declared Git state into cluster runtime state**.
+| Architectural Feature | Pattern 1 (Dual Dropdown Push) | Pattern 2 (Decoupled CI ➔ CD Hand-off Push) | Pure GitOps (This Repository) |
+| :--- | :--- | :--- | :--- |
+| **Jenkins Jobs Count** | 1 Monolithic Pipeline per app. | 2 Pipelines (01-CI-Build + 02-CD-Orchestrator). | **1 Parameterless CI Pipeline** per app. |
+| **Parameter Interface** | Jenkins UI (2 dropdowns in 1 job). | Jenkins UI (1 dropdown in CI, 1 dropdown in CD). | **Git (PRs/Tags) & ArgoCD `targetRevision`**. |
+| **SCM Complexity** | High (Multi-remote refspec bindings). | Moderate (Isolated SCM bindings per pipeline). | **Zero SCM Hacks** (Standard webhooks/branches). |
+| **Release Trigger** | Manual human click in Jenkins. | Manual click or downstream trigger to Pipeline 02. | **100% Event-Driven** via Git webhooks / PRs. |
+| **Jenkins Credentials** | High (Cluster tokens & Git write). | High (Cluster tokens, Skopeo, ArgoCD API keys). | **Zero Cluster Credentials** (Least Privilege). |
+| **Deployment Engine** | Jenkins Agent (Push). | Jenkins Agent ➔ invokes ArgoCD sync. | **ArgoCD 3.5 Pull Controller** (Continuous). |
+| **Ephemeral PR Envs** | Complex Groovy scripts. | Complex Groovy scripts in Pipeline 02. | **Native ArgoCD ApplicationSet PR Generator**. |
+| **Configuration Drift** | Blindspot (No self-healing). | Blindspot (ArgoCD only syncs when Jenkins runs). | **Continuous Self-Healing** (24/7 reconciliation). |
 
 ---
 
