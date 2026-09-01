@@ -1,0 +1,45 @@
+# ==============================================================================
+# ArgoCD ApplicationSet: Dynamic Ephemeral Pull Request (PR) Preview Generator
+# Generates preview environments per GitHub PR with Zero Jenkins Dropdowns
+# ==============================================================================
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: ephemeral-pr-preview-environments
+  namespace: argocd
+spec:
+  generators:
+    # Pull Request Generator: Listens to GitHub PR events
+    - pullRequest:
+        github:
+          owner: nubenetes
+          repo: jhipster-microservice
+          labels:
+            - preview-environment
+          tokenRef:
+            secretName: github-token-secret
+            key: token
+        requeueAfterSeconds: 60
+  template:
+    metadata:
+      name: "preview-pr-{{number}}-jhipster"
+      namespace: argocd
+      labels:
+        environment: preview
+        pr-number: "{{number}}"
+        branch: "{{branch}}"
+    spec:
+      project: default
+      source:
+        repoURL: https://github.com/nubenetes/jhipster-microservice.git
+        targetRevision: "{{head_sha}}"
+        path: k8s/overlays/dev
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: "pr-preview-{{number}}"
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true

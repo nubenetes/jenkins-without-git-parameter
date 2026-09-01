@@ -1,0 +1,63 @@
+# ==============================================================================
+# ArgoCD 3.5 Production Values for OpenShift 4.20+ Multi-Cluster GitOps
+# ==============================================================================
+global:
+  domain: "argocd-server.apps.ocp-dev.nubenetes.internal"
+  image:
+    repository: "quay.io/argoproj/argocd"
+    tag: "v3.5.0"
+    imagePullPolicy: "IfNotPresent"
+
+# OpenShift Hardening: Run as non-root
+server:
+  extraArgs:
+    - --insecure
+  route:
+    enabled: true
+    annotations:
+      haproxy.router.openshift.io/timeout: "180s"
+    tls:
+      enabled: true
+      termination: edge
+      insecureEdgeTerminationPolicy: Redirect
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+  config:
+    application.instanceLabelKey: argocd.argoproj.io/instance
+    url: https://argocd-server.apps.ocp-dev.nubenetes.internal
+    # Multi-Cluster Sync Settings
+    resource.customizations.health.route.openshift.io_Route: |
+      hs = {}
+      hs.status = "Healthy"
+      return hs
+
+controller:
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+  args:
+    statusProcessors: "30"
+    operationProcessors: "25"
+    appResyncPeriod: "180"
+
+# ApplicationSet Controller for Multi-Cluster Generator
+applicationSet:
+  enabled: true
+  metrics:
+    enabled: true
+  extraArgs:
+    - --enable-leader-election=true
+
+# Repo Server
+repoServer:
+  metrics:
+    enabled: true
+
+# OpenTelemetry Exporter Integration
+notifications:
+  enabled: true
+  metrics:
+    enabled: true

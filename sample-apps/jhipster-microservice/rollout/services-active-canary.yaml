@@ -1,0 +1,28 @@
+# ==============================================================================
+# OpenShift Services for Stable & Canary Traffic Routing
+# ==============================================================================
+apiVersion: v1
+kind: Service
+metadata:
+  name: jhipster-stable-svc
+  namespace: nubenetes-prod-apps
+spec:
+  ports:
+    - port: 8080
+      targetPort: 8080
+      name: http
+  selector:
+    app: jhipster-microservice
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: jhipster-canary-svc
+  namespace: nubenetes-prod-apps
+spec:
+  ports:
+    - port: 8080
+      targetPort: 8080
+      name: http
+  selector:
+    app: jhipster-microservice

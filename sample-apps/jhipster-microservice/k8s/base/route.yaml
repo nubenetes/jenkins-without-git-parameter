@@ -1,0 +1,15 @@
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: jhipster-microservice
+  labels:
+    app.kubernetes.io/name: jhipster-microservice
+spec:
+  to:
+    kind: Service
+    name: jhipster-microservice
+  port:
+    targetPort: http
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect

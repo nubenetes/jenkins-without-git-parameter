@@ -1,0 +1,123 @@
+# ==============================================================================
+# Jenkins Configuration as Code (JCasC) - OpenShift 4.20+ Pure GitOps Engine
+# Architecture: Zero-Parameter Lean CI Engine with ArgoCD 3.5 GitOps Orchestrator
+# ==============================================================================
+jenkins:
+  systemMessage: "🚀 Nubenetes Enterprise Jenkins Controller | Lean CI Engine with Pure GitOps (ArgoCD 3.5 Native Parameterization)"
+  numExecutors: 0
+  mode: EXCLUSIVE
+  scmCheckoutRetryCount: 3
+
+  securityRealm:
+    local:
+      allowsSignup: false
+      users:
+        - id: "admin"
+          name: "OpenShift Platform Admin"
+          password: "${JENKINS_ADMIN_PASSWORD:-admin123!}"
+        - id: "ci-service"
+          name: "GitOps Automated Bot / GitHub App"
+          password: "${JENKINS_SERVICE_PASSWORD:-service123!}"
+
+  authorizationStrategy:
+    projectMatrix:
+      permissions:
+        - "Overall/Administer:admin"
+        - "Overall/Read:authenticated"
+        - "Overall/Read:anonymous"
+        - "Job/Build:authenticated"
+        - "Job/Read:authenticated"
+        - "Job/Read:anonymous"
+        - "Job/Cancel:authenticated"
+        - "Job/Workspace:authenticated"
+        - "View/Read:authenticated"
+        - "View/Read:anonymous"
+        - "Metrics/View:anonymous"
+        - "Metrics/View:authenticated"
+
+  crumbIssuer:
+    standard:
+      excludeClientIPFromCrumb: true
+
+  globalNodeProperties:
+    - envVars:
+        env:
+          - key: "PLATFORM_DOMAIN"
+            value: "apps.ocp-dev.nubenetes.internal"
+          - key: "GITOPS_REPO"
+            value: "https://github.com/nubenetes/jenkins-without-git-parameter.git"
+          - key: "DEV_REGISTRY_HOST"
+            value: "image-registry.openshift-image-registry.svc:5000"
+          - key: "STAGING_REGISTRY_HOST"
+            value: "image-registry.openshift-image-registry.svc:5000"
+          - key: "PROD_REGISTRY_HOST"
+            value: "image-registry.openshift-image-registry.svc:5000"
+
+unclassified:
+  location:
+    url: "https://jenkins-jenkins.apps.ocp-dev.nubenetes.internal/"
+    adminAddress: "devops-team@nubenetes.io"
+
+  # OpenTelemetry Tracing Configuration for End-to-End Observability
+  openTelemetry:
+    endpoint: "http://otel-collector.observability.svc.cluster.local:4317"
+    serviceName: "nubenetes-jenkins"
+    serviceNamespace: "jenkins"
+    exportOtelConfigurationAsEnvironmentVariables: true
+    stepTextTraceLimit: 4096
+
+  # Prometheus Metrics Endpoint Configuration
+  prometheusConfiguration:
+    path: "prometheus"
+    collectingMetricsPeriodInSeconds: 60
+    useVerboseMetrics: true
+    countSuccessfulBuilds: true
+    countFailedBuilds: true
+    countNotBuiltBuilds: true
+    countAbortedBuilds: true
+    fetchTestResults: true
+    appendStatusLabel: true
+    appendParamLabel: true
+
+  # Global Pipeline Libraries Configuration
+  globalLibraries:
+    libraries:
+      - name: "nubenetes-shared-library"
+        defaultVersion: "main"
+        implicit: true
+        allowVersionOverride: true
+        includeInChangesets: false
+        retriever:
+          modernSCM:
+            scm:
+              git:
+                remote: "https://github.com/nubenetes/jenkins-without-git-parameter.git"
+                traits:
+                  - gitBranchDiscovery
+
+# Master Seed Job Definition using JCasC Job DSL Integration
+jobs:
+  - script: |
+      job('00-Seed-Job-Platform-Orchestrator') {
+        description('Master Seed Job provisioning CI Multibranch Pipelines and Automated GitOps Integration as Code.')
+        keepDependencies(false)
+        scm {
+          git {
+            remote {
+              url('https://github.com/nubenetes/jenkins-without-git-parameter.git')
+            }
+            branch('*/main')
+          }
+        }
+        steps {
+          jobDsl {
+            targets('jobdsl/seed-job.groovy\njobdsl/pipelines-ci.groovy')
+            removedJobAction('DELETE')
+            removedViewAction('DELETE')
+            lookupStrategy('JENKINS_ROOT')
+          }
+        }
+        triggers {
+          scm('H/15 * * * *')
+        }
+      }

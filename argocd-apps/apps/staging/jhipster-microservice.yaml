@@ -1,0 +1,25 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: jhipster-microservice-staging
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: jhipster-microservice
+    environment: staging
+    pattern: pure-gitops
+spec:
+  project: default
+  source:
+    repoURL: 'https://github.com/nubenetes/jenkins-without-git-parameter.git'
+    targetRevision: staging
+    path: sample-apps/jhipster-microservice/k8s/overlays/staging
+  destination:
+    name: ocp-staging-cluster
+    namespace: nubenetes-staging-apps
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ApplyOutOfSyncOnly=true

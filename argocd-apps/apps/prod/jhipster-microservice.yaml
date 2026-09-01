@@ -1,0 +1,27 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: jhipster-microservice-prod
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: jhipster-microservice
+    environment: prod
+    pattern: pure-gitops
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  project: default
+  source:
+    repoURL: 'https://github.com/nubenetes/jenkins-without-git-parameter.git'
+    targetRevision: prod
+    path: sample-apps/jhipster-microservice/k8s/overlays/prod
+  destination:
+    name: ocp-prod-cluster
+    namespace: nubenetes-prod-apps
+  syncPolicy:
+    automated:
+      prune: false
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ApplyOutOfSyncOnly=true

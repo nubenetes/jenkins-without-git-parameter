@@ -1,0 +1,6 @@
+clusterName: ocp-dev
+region: europe-west1
+environment: dev
+apiServer: https://api.ocp-dev.nubenetes.internal:6443
+ingressDomain: apps.ocp-dev.nubenetes.internal
+internalRegistry: image-registry.openshift-image-registry.svc:5000

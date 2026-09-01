@@ -1,0 +1,46 @@
+# ==============================================================================
+# ArgoCD ApplicationSet: Multi-Cluster Matrix Generator
+# Deploys applications across DEV, STAGING, and PROD clusters automatically
+# ==============================================================================
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: matrix-multicluster-workloads
+  namespace: argocd
+spec:
+  generators:
+    - matrix:
+        generators:
+          # Cluster Generator: Discovers all registered OpenShift clusters
+          - clusters:
+              selector:
+                matchLabels:
+                  environment: "{{metadata.labels.environment}}"
+          # Git Generator: Discovers all workloads in gitops-manifests
+          - git:
+              repoURL: https://github.com/nubenetes/jenkins-without-git-parameter.git
+              revision: main
+              directories:
+                - path: sample-apps/jhipster-microservice/k8s/overlays/*
+  template:
+    metadata:
+      name: "{{path.basename}}-{{name}}"
+      namespace: argocd
+      labels:
+        environment: "{{metadata.labels.environment}}"
+        app.kubernetes.io/managed-by: argocd
+    spec:
+      project: default
+      source:
+        repoURL: https://github.com/nubenetes/jenkins-without-git-parameter.git
+        targetRevision: "{{metadata.labels.environment}}"
+        path: "{{path}}"
+      destination:
+        server: "{{server}}"
+        namespace: "nubenetes-{{metadata.labels.environment}}-apps"
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true

@@ -1,0 +1,25 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: jhipster-microservice-dev
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: jhipster-microservice
+    environment: dev
+    pattern: pure-gitops
+spec:
+  project: default
+  source:
+    repoURL: 'https://github.com/nubenetes/jenkins-without-git-parameter.git'
+    targetRevision: main
+    path: sample-apps/jhipster-microservice/k8s/overlays/dev
+  destination:
+    server: 'https://kubernetes.default.svc'
+    namespace: nubenetes-dev-apps
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ApplyOutOfSyncOnly=true

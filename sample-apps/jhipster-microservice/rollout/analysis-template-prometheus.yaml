@@ -1,0 +1,36 @@
+# ==============================================================================
+# Argo Rollouts: AnalysisTemplate for Automated Metric Verification
+# Queries Prometheus for 5xx error rate and p99 latency before traffic step
+# ==============================================================================
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: http-success-rate-and-latency
+  namespace: nubenetes-prod-apps
+spec:
+  metrics:
+    # 1. Error Rate Verification (HTTP 5xx < 0.1%)
+    - name: success-rate
+      interval: 30s
+      count: 3
+      successCondition: result[0] <= 0.001
+      failureLimit: 1
+      provider:
+        prometheus:
+          address: http://prometheus-k8s.openshift-monitoring.svc:9090
+          query: |
+            sum(rate(http_requests_total{job="jhipster-microservice",status=~"5.*"}[2m]))
+            /
+            sum(rate(http_requests_total{job="jhipster-microservice"}[2m]))
+
+    # 2. Latency Verification (p99 < 250ms)
+    - name: p99-latency
+      interval: 30s
+      count: 3
+      successCondition: result[0] <= 0.250
+      failureLimit: 1
+      provider:
+        prometheus:
+          address: http://prometheus-k8s.openshift-monitoring.svc:9090
+          query: |
+            histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket{job="jhipster-microservice"}[2m])) by (le))

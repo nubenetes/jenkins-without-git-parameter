@@ -1,0 +1,60 @@
+# ==============================================================================
+# Argo Rollouts: Canary Deployment for JHipster Microservice
+# Automated Progressive Delivery with Metric-driven Steps
+# ==============================================================================
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: jhipster-microservice
+  namespace: nubenetes-prod-apps
+  labels:
+    app: jhipster-microservice
+spec:
+  replicas: 10
+  revisionHistoryLimit: 5
+  selector:
+    matchLabels:
+      app: jhipster-microservice
+  template:
+    metadata:
+      labels:
+        app: jhipster-microservice
+    spec:
+      containers:
+        - name: jhipster-app
+          image: image-registry.openshift-image-registry.svc:5000/nubenetes-prod-apps/jhipster-microservice:2.1.0-release
+          ports:
+            - containerPort: 8080
+              name: http
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+            limits:
+              cpu: 1000m
+              memory: 1024Mi
+  strategy:
+    canary:
+      stableService: jhipster-stable-svc
+      canaryService: jhipster-canary-svc
+      trafficRouting:
+        nginx:
+          stableIngress: jhipster-stable-route
+      steps:
+        # Step 1: 10% traffic with 2-minute metric bake time
+        - setWeight: 10
+        - pause: { duration: 120s }
+        - analysis:
+            templates:
+              - templateName: http-success-rate-and-latency
+        # Step 2: 25% traffic with metric check
+        - setWeight: 25
+        - pause: { duration: 180s }
+        - analysis:
+            templates:
+              - templateName: http-success-rate-and-latency
+        # Step 3: 50% traffic
+        - setWeight: 50
+        - pause: { duration: 120s }
+        # Step 4: 100% full promotion
+        - setWeight: 100

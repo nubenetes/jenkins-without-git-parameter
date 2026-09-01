@@ -1,0 +1,19 @@
+# Global Environment Variables & Application Versions: PRODUCTION
+environment: prod
+cluster: ocp-prod
+domain: apps.ocp-prod.nubenetes.internal
+dnsZone: prod.nubenetes.internal
+
+applications:
+  jhipster-microservice: "2.0.8-35-e1d2c3b"
+  angular-frontend: "1.4.9-12-b9a8c7d"
+
+monitoring:
+  enabled: true
+  logLevel: WARN
+  tracingSampleRate: "0.1"
+
+database:
+  host: postgresql-ha.nubenetes-prod-apps.svc
+  port: 5432
+  poolSize: 100

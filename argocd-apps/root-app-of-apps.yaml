@@ -1,0 +1,28 @@
+# ==============================================================================
+# ArgoCD 3.5 Root App-of-Apps Pattern
+# Declarative GitOps Bootstrapper: Git is the Single Source of Truth
+# ==============================================================================
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: root-app-of-apps
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/nubenetes/jenkins-without-git-parameter.git
+    targetRevision: main
+    path: argocd-apps
+    recurse: true
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ApplyOutOfSyncOnly=true

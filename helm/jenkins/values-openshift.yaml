@@ -1,0 +1,85 @@
+# ==============================================================================
+# OpenShift 4.20+ Specific Overrides for Jenkins Helm Chart
+# ==============================================================================
+controller:
+  # OpenShift Security Context Constraints compliance (restricted-v2 / nonroot)
+  podSecurityContextOverride:
+    runAsNonRoot: true
+    seccompProfile:
+      type: RuntimeDefault
+
+  containerSecurityContext:
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: false
+    runAsUser: 1000
+    runAsGroup: 1000
+    capabilities:
+      drop:
+        - ALL
+
+  # Mount JCasC scripts and Job DSL configs via ConfigMaps
+  extraVolumes:
+    - name: jcasc-config
+      configMap:
+        name: jenkins-jcasc-config
+    - name: pod-templates-config
+      configMap:
+        name: jenkins-pod-templates-config
+    - name: jobdsl-scripts
+      configMap:
+        name: jenkins-jobdsl-scripts
+    - name: cluster-topology
+      configMap:
+        name: nubenetes-cluster-topology
+
+  extraVolumeMounts:
+    - name: jcasc-config
+      mountPath: /var/jenkins_home/casc_configs/jenkins-jcasc.yaml
+      subPath: jenkins-jcasc.yaml
+      readOnly: true
+    - name: pod-templates-config
+      mountPath: /var/jenkins_home/casc_configs/pod-templates.yaml
+      subPath: pod-templates.yaml
+      readOnly: true
+    - name: cluster-topology
+      mountPath: /var/jenkins_home/casc_configs/clusters.yaml
+      subPath: clusters.yaml
+      readOnly: true
+    - name: jobdsl-scripts
+      mountPath: /var/jenkins_home/jobdsl
+      readOnly: true
+
+  # Set CASC_VAULT or CASC directory
+  extraEnvVars:
+    - name: CASC_JENKINS_CONFIG
+      value: "/var/jenkins_home/casc_configs"
+    - name: OPENSHIFT_ENABLE_OAUTH
+      value: "false"
+    - name: OTEL_EXPORTER_OTLP_ENDPOINT
+      value: "http://otel-collector.observability.svc.cluster.local:4317"
+    - name: ARGOCD_SERVER
+      value: "argocd-server.argocd.svc.cluster.local:443"
+
+  # OpenShift Route Configuration (Ingress alternative native to OCP)
+  route:
+    enabled: true
+    annotations:
+      haproxy.router.openshift.io/timeout: "180s"
+      haproxy.router.openshift.io/balance: "roundrobin"
+    labels: {}
+    path: ""
+    tls:
+      enabled: true
+      termination: edge
+      insecureEdgeTerminationPolicy: Redirect
+
+# OpenShift ServiceAccount settings
+serviceAccount:
+  create: true
+  name: "jenkins"
+  annotations:
+    serviceaccounts.openshift.io/oauth-redirectreference.jenkins: '{"kind":"OAuthRedirectReference","apiVersion":"v1","reference":{"kind":"Route","name":"jenkins"}}'
+
+rbac:
+  create: true
+  readSecrets: true

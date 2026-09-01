@@ -1,0 +1,10 @@
+apiVersion: v2
+name: nubenetes-jenkins
+description: Enterprise Jenkins Controller on OpenShift 4.20+ with JCasC, Job DSL, Git Parameter & OpenTelemetry
+type: application
+version: 1.0.0
+appVersion: "2.492.2-lts-jdk21"
+dependencies:
+  - name: jenkins
+    version: 5.8.31
+    repository: https://charts.jenkins.io

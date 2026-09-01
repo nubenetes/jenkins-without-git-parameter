@@ -1,0 +1,35 @@
+# ==============================================================================
+# ArgoCD ApplicationSet: Git Branch & Tag Generator
+# Automatically tracks release branches (e.g. release/v1.0, release/v2.0)
+# ==============================================================================
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: release-branch-generator
+  namespace: argocd
+spec:
+  generators:
+    - git:
+        repoURL: https://github.com/nubenetes/jenkins-without-git-parameter.git
+        revision: main
+        directories:
+          - path: sample-apps/jhipster-microservice/k8s/overlays/*
+  template:
+    metadata:
+      name: "branch-tracker-{{path.basename}}"
+      namespace: argocd
+    spec:
+      project: default
+      source:
+        repoURL: https://github.com/nubenetes/jenkins-without-git-parameter.git
+        targetRevision: "{{path.basename}}"
+        path: "{{path}}"
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: "nubenetes-{{path.basename}}-apps"
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true

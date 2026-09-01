@@ -1,0 +1,19 @@
+# Global Environment Variables & Application Versions: STAGING
+environment: staging
+cluster: ocp-staging
+domain: apps.ocp-staging.nubenetes.internal
+dnsZone: staging.nubenetes.internal
+
+applications:
+  jhipster-microservice: "2.1.0-40-f8e7d6c"
+  angular-frontend: "1.5.0-16-c3b2a1f"
+
+monitoring:
+  enabled: true
+  logLevel: INFO
+  tracingSampleRate: "0.5"
+
+database:
+  host: postgresql-staging.nubenetes-staging-apps.svc
+  port: 5432
+  poolSize: 25

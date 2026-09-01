@@ -1,0 +1,56 @@
+# ==============================================================================
+# Grafana Helm Chart Values with Pre-Configured Datasources & Dashboards
+# ==============================================================================
+adminPassword: "${GRAFANA_ADMIN_PASSWORD:-admin123!}"
+
+image:
+  repository: grafana/grafana
+  tag: "13.2.0"
+  pullPolicy: IfNotPresent
+
+datasources:
+  datasources.yaml:
+    apiVersion: 1
+    datasources:
+      - name: Prometheus
+        type: prometheus
+        url: http://prometheus-server.observability.svc.cluster.local
+        access: proxy
+        isDefault: true
+        jsonData:
+          exemplarTraceIdDestinations:
+            - name: trace_id
+              datasourceUid: OpenTelemetry-Traces
+              urlDisplayLabel: "View OpenTelemetry Trace (Tempo/Jaeger)"
+      - name: OpenTelemetry-Traces
+        type: jaeger
+        uid: OpenTelemetry-Traces
+        url: http://otel-collector.observability.svc.cluster.local:16686
+        access: proxy
+
+dashboardProviders:
+  dashboardproviders.yaml:
+    apiVersion: 1
+    providers:
+      - name: 'jenkins-dashboards'
+        orgId: 1
+        folder: 'Jenkins & GitOps CI/CD'
+        type: file
+        disableDeletion: false
+        editable: true
+        options:
+          path: /var/lib/grafana/dashboards/custom
+
+dashboards:
+  custom:
+    jenkins-performance:
+      file: dashboards/jenkins-performance-otel.json
+    argocd-gitops:
+      file: dashboards/argocd-gitops-sync.json
+    workload-correlation:
+      file: dashboards/app-full-stack-correlation.json
+
+serviceAccount:
+  create: true
+  name: grafana
+

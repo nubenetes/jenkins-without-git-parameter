@@ -1,0 +1,11 @@
+.DS_Store
+*.swp
+*.bak
+*~
+target/
+node_modules/
+dist/
+.idea/
+.vscode/
+*.log
+scratch/

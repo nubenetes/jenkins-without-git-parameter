@@ -1,0 +1,14 @@
+# Inventory of applications governed by Nubenetes IaC Platform
+inventory:
+  - id: jhipster-microservice
+    type: backend-service
+    framework: spring-boot-3
+    jdk: 21
+    repo: https://github.com/nubenetes/jhipster-microservice.git
+    owner: backend-platform-team
+  - id: angular-frontend
+    type: frontend-spa
+    framework: angular-18
+    node: 20
+    repo: https://github.com/nubenetes/angular-frontend.git
+    owner: frontend-platform-team

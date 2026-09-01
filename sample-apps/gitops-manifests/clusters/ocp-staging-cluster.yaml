@@ -1,0 +1,6 @@
+clusterName: ocp-staging
+region: europe-west1
+environment: staging
+apiServer: https://api.ocp-staging.nubenetes.internal:6443
+ingressDomain: apps.ocp-staging.nubenetes.internal
+internalRegistry: image-registry.openshift-image-registry.svc:5000

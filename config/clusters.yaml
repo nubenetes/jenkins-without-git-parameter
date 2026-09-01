@@ -1,0 +1,36 @@
+# ==============================================================================
+# OpenShift Multi-Cluster Topologies for ArgoCD 3.5 GitOps Reconciliation
+# ==============================================================================
+clusters:
+  - name: ocp-dev
+    environment: dev
+    apiServer: https://kubernetes.default.svc
+    stage: development
+    syncPolicy:
+      automated:
+        prune: true
+        selfHeal: true
+    targetRevision: main
+
+  - name: ocp-staging
+    environment: staging
+    apiServer: https://api.ocp-staging.nubenetes.internal:6443
+    stage: uat-staging
+    syncPolicy:
+      automated:
+        prune: true
+        selfHeal: true
+    targetRevision: staging
+
+  - name: ocp-prod
+    environment: prod
+    apiServer: https://api.ocp-prod.nubenetes.internal:6443
+    stage: production
+    syncPolicy:
+      automated:
+        prune: false
+        selfHeal: true
+    targetRevision: prod
+    progressiveDelivery:
+      strategy: canary
+      analysisTemplate: prometheus-error-latency-check

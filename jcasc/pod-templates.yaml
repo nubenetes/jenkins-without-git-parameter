@@ -1,0 +1,112 @@
+# ==============================================================================
+# Ephemeral Kubernetes Agent Pod Templates (OpenShift 4.20+ Hardened)
+# ==============================================================================
+jenkins:
+  clouds:
+    - kubernetes:
+        name: "openshift-cluster"
+        serverUrl: "https://kubernetes.default.svc"
+        namespace: "jenkins"
+        jenkinsUrl: "http://jenkins.jenkins.svc.cluster.local:8080"
+        jenkinsTunnel: "jenkins-agent.jenkins.svc.cluster.local:50000"
+        containerCapStr: "50"
+        retentionTimeout: 10
+        connectTimeout: 100
+        templates:
+          # Pod Template: Maven & Java 21 Builder
+          - name: "maven-jdk21"
+            label: "maven-jdk21"
+            serviceAccount: "jenkins"
+            nodeUsageMode: "EXCLUSIVE"
+            workspaceVolume:
+              emptyDirWorkspaceVolume:
+                memory: false
+            containers:
+              - name: "jnlp"
+                image: "jenkins/inbound-agent:3283.v92c105e0f819-1-jdk21"
+                privileged: false
+                alwaysPullImage: false
+                workingDir: "/home/jenkins/agent"
+                resourceRequestCpu: "200m"
+                resourceLimitCpu: "500m"
+                resourceRequestMemory: "256Mi"
+                resourceLimitMemory: "512Mi"
+              - name: "maven"
+                image: "maven:3.9.9-eclipse-temurin-21-alpine"
+                command: "cat"
+                ttyEnabled: true
+                privileged: false
+                alwaysPullImage: false
+                workingDir: "/home/jenkins/agent"
+                resourceRequestCpu: "1000m"
+                resourceLimitCpu: "2000m"
+                resourceRequestMemory: "1024Mi"
+                resourceLimitMemory: "2048Mi"
+
+          # Pod Template: Node.js 20 & Angular Builder
+          - name: "node-angular"
+            label: "node-angular"
+            serviceAccount: "jenkins"
+            nodeUsageMode: "EXCLUSIVE"
+            workspaceVolume:
+              emptyDirWorkspaceVolume:
+                memory: false
+            containers:
+              - name: "jnlp"
+                image: "jenkins/inbound-agent:3283.v92c105e0f819-1-jdk21"
+                privileged: false
+                alwaysPullImage: false
+                workingDir: "/home/jenkins/agent"
+              - name: "nodejs"
+                image: "node:20-alpine"
+                command: "cat"
+                ttyEnabled: true
+                privileged: false
+                workingDir: "/home/jenkins/agent"
+                resourceRequestCpu: "500m"
+                resourceLimitCpu: "1500m"
+                resourceRequestMemory: "512Mi"
+                resourceLimitMemory: "1536Mi"
+
+          # Pod Template: Supply Chain Security (Cosign, Syft, Trivy)
+          - name: "security-tools"
+            label: "security-tools"
+            serviceAccount: "jenkins"
+            nodeUsageMode: "EXCLUSIVE"
+            containers:
+              - name: "jnlp"
+                image: "jenkins/inbound-agent:3283.v92c105e0f819-1-jdk21"
+              - name: "cosign-syft"
+                image: "cgr.dev/chainguard/cosign:latest"
+                command: "cat"
+                ttyEnabled: true
+                workingDir: "/home/jenkins/agent"
+                resourceRequestCpu: "200m"
+                resourceLimitCpu: "1000m"
+              - name: "trivy"
+                image: "aquasec/trivy:0.59.1"
+                command: "cat"
+                ttyEnabled: true
+                workingDir: "/home/jenkins/agent"
+                resourceRequestCpu: "500m"
+                resourceLimitCpu: "1000m"
+                resourceRequestMemory: "512Mi"
+                resourceLimitMemory: "1024Mi"
+
+          # Pod Template: GitOps Bot (Git, Kustomize, yq, gh)
+          - name: "gitops-bot"
+            label: "gitops-bot"
+            serviceAccount: "jenkins"
+            nodeUsageMode: "EXCLUSIVE"
+            containers:
+              - name: "jnlp"
+                image: "jenkins/inbound-agent:3283.v92c105e0f819-1-jdk21"
+              - name: "tools"
+                image: "alpine/k8s:1.31.2"
+                command: "cat"
+                ttyEnabled: true
+                workingDir: "/home/jenkins/agent"
+                resourceRequestCpu: "200m"
+                resourceLimitCpu: "500m"
+                resourceRequestMemory: "256Mi"
+                resourceLimitMemory: "512Mi"

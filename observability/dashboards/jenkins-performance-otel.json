@@ -1,0 +1,102 @@
+{
+  "annotations": {
+    "list": []
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": 100,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "collapsed": false,
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 },
+      "id": 1,
+      "title": "Total Builds Executed (24h)",
+      "type": "stat",
+      "targets": [
+        {
+          "expr": "sum(increase(jenkins_runs_total[24h]))",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 0 },
+      "id": 2,
+      "title": "Pipeline Success Rate",
+      "type": "gauge",
+      "targets": [
+        {
+          "expr": "sum(increase(jenkins_runs_success_total[24h])) / sum(increase(jenkins_runs_total[24h])) * 100",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 0 },
+      "id": 3,
+      "title": "Active Ephemeral Agent Pods",
+      "type": "stat",
+      "targets": [
+        {
+          "expr": "sum(jenkins_node_count{state=\"online\"}) - 1",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 0 },
+      "id": 4,
+      "title": "Queue Wait Latency (p95)",
+      "type": "stat",
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(jenkins_executor_queue_time_bucket[5m])) by (le))",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 4 },
+      "id": 5,
+      "title": "Pipeline Stage Duration Breakdown (OTel Spans)",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "sum(rate(jenkins_pipeline_stage_duration_seconds_sum[5m])) by (stage_name)",
+          "legendFormat": "{{stage_name}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 4 },
+      "id": 6,
+      "title": "Multi-Cluster Promotion Duration",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "sum(rate(jenkins_runs_duration_milliseconds_sum{job=~\"02-CD-.*\"}[5m])) by (job) / 1000",
+          "legendFormat": "{{job}}",
+          "refId": "A"
+        }
+      ]
+    }
+  ],
+  "refresh": "10s",
+  "schemaVersion": 39,
+  "tags": ["jenkins", "opentelemetry", "openshift", "gitops"],
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "title": "Jenkins & OpenTelemetry Performance Overview",
+  "uid": "nubenetes-jenkins-otel"
+}

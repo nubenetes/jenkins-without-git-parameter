@@ -1,0 +1,89 @@
+{
+  "annotations": {
+    "list": []
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": 101,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "collapsed": false,
+      "gridPos": { "h": 4, "w": 8, "x": 0, "y": 0 },
+      "id": 1,
+      "title": "ArgoCD Managed Applications",
+      "type": "stat",
+      "targets": [
+        {
+          "expr": "sum(argocd_app_info)",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 4, "w": 8, "x": 8, "y": 0 },
+      "id": 2,
+      "title": "Synced Applications (%)",
+      "type": "gauge",
+      "targets": [
+        {
+          "expr": "sum(argocd_app_info{sync_status=\"Synced\"}) / sum(argocd_app_info) * 100",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 4, "w": 8, "x": 16, "y": 0 },
+      "id": 3,
+      "title": "Healthy Applications (%)",
+      "type": "gauge",
+      "targets": [
+        {
+          "expr": "sum(argocd_app_info{health_status=\"Healthy\"}) / sum(argocd_app_info) * 100",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 4 },
+      "id": 4,
+      "title": "ArgoCD Application Sync Duration by Cluster",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "sum(rate(argocd_app_sync_total[5m])) by (dest_server, phase)",
+          "legendFormat": "{{dest_server}} ({{phase}})",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 4 },
+      "id": 5,
+      "title": "GitOps Sync Failures / Out-of-Sync Events",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "sum(increase(argocd_app_sync_total{phase=\"Failed\"}[1h])) by (name)",
+          "legendFormat": "{{name}} failed syncs",
+          "refId": "A"
+        }
+      ]
+    }
+  ],
+  "refresh": "10s",
+  "schemaVersion": 39,
+  "tags": ["argocd", "gitops", "openshift", "multi-cluster"],
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "title": "ArgoCD 3.5 Multi-Cluster GitOps & Sync Health",
+  "uid": "nubenetes-argocd-gitops"
+}

@@ -1,0 +1,20 @@
+# ==============================================================================
+# Prometheus Values for Jenkins & ArgoCD Metric Collection
+# ==============================================================================
+server:
+  global:
+    scrape_interval: 15s
+    evaluation_interval: 15s
+
+extraScrapeConfigs: |
+  - job_name: 'jenkins-master'
+    metrics_path: '/prometheus'
+    scrape_interval: 10s
+    static_configs:
+      - targets: ['jenkins.jenkins.svc.cluster.local:8080']
+
+  - job_name: 'argocd-metrics'
+    metrics_path: '/metrics'
+    scrape_interval: 15s
+    static_configs:
+      - targets: ['argocd-server-metrics.argocd.svc.cluster.local:8083']

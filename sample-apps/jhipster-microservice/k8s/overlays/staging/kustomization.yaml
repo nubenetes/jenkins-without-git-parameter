@@ -1,0 +1,9 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: nubenetes-staging-apps
+bases:
+  - ../../base
+images:
+  - name: image-registry.openshift-image-registry.svc:5000/nubenetes-dev-apps/jhipster-microservice
+    newName: image-registry.openshift-image-registry.svc:5000/nubenetes-staging-apps/jhipster-microservice
+    newTag: "2.1.0-latest"

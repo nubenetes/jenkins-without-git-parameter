@@ -1,0 +1,32 @@
+server:
+  port: 8080
+spring:
+  application:
+    name: jhipster-microservice
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+  endpoint:
+    health:
+      show-details: always
+    prometheus:
+      access: read_only
+  tracing:
+    sampling:
+      probability: 1.0
+    propagation:
+      type: W3C
+  otlp:
+    tracing:
+      endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT:http://otel-collector.observability.svc.cluster.local:4318/v1/traces}
+  metrics:
+    tags:
+      application: ${spring.application.name}
+      cluster: ${CLUSTER_NAME:ocp-dev}
+      environment: ${DEPLOYMENT_ENV:dev}
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+
