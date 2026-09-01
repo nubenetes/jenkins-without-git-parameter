@@ -157,14 +157,14 @@ This repository provides the complete, production-ready **Infrastructure as Code
 
 ```mermaid
 flowchart TB
-    subgraph P1["Pattern 1: Monolithic Dual Dropdown (jenkins-git-parameter)"]
+    subgraph P1["Pattern 1: Monolithic Dual Dropdown (Push)"]
         direction TB
         Dev1["👩‍💻 User"] -->|"1. Selects App & Vars Dropdowns"| JJob1["📋 Single Pipeline<br/>(Multi-Remote SCM origin-app & origin-vars)"]
         JJob1 -->|"2. Builds & Deploys"| Agent1["⚙️ Jenkins Agent<br/>(Holds Cluster Secrets)"]
         Agent1 -->|"3. Imperative Push"| K8s1["☸️ OpenShift Clusters"]
     end
 
-    subgraph P2["Pattern 2: Decoupled CI ➔ CD Hand-off (jenkins-git-parameter Recommended)"]
+    subgraph P2["Pattern 2: Decoupled CI ➔ CD Hand-off (Push)"]
         direction TB
         Dev2["👩‍💻 User"] -->|"1. Selects App Branch"| CI2["🏗️ Pipeline 01: CI Build<br/>(APP_GIT_REVISION Dropdown)"]
         CI2 -->|"2. Builds Image Once"| Reg2["🐳 Container Registry"]
@@ -174,7 +174,7 @@ flowchart TB
         Argo2 -->|"6. Syncs Cluster"| K8s2["☸️ OpenShift Clusters"]
     end
 
-    subgraph P3["Pattern 3: Pure GitOps Event-Driven Pull (This Repository - Recommended)"]
+    subgraph P3["Pattern 3: Pure GitOps Event-Driven Pull (Recommended)"]
         direction TB
         Dev3["👩‍💻 Developer"] -->|"1. Git PR / Release Tag"| Git3["🐙 Git Repository (SSOT)<br/>(App Code & GitOps Overlays)"]
         Git3 -.->|"2. Webhook Event"| CI3["🏗️ Lean Jenkins CI<br/>(Zero UI Parameters / Multibranch)"]
@@ -427,24 +427,24 @@ In **Pure GitOps (`jenkins-without-git-parameter`)**, Backstage and ServiceNow i
 flowchart TB
     subgraph LegacyITSM["Pattern A: Legacy Push ITSM Flow (jenkins-git-parameter Pattern 2)"]
         direction TB
-        DevA["👩‍💻 Developer / Release Mgr"] -->|"1. Opens Change Request"| ITSMA["📋 ServiceNow / Jira ITSM<br/>(Change Ticket CHG00123)"]
-        ITSMA -->|"2. Approved: Calls Jenkins API"| JMasterA["⚙️ Jenkins Master<br/>(REST API Trigger with Params)"]
-        JMasterA -->|"3. Runs Pipeline 02"| JAgentA["🚀 Jenkins Agent Pod<br/>(Holds Cluster Secrets & Skopeo)"]
-        JAgentA -->|"4. Commits Manifest & Calls Sync"| ArgoA["🐙 ArgoCD Controller"]
-        ArgoA -->|"5. Deploys"| K8sA["☸️ OpenShift PROD Cluster"]
-        JAgentA -->|"6. Closes Change Ticket via Webhook"| ITSMA
-        BackstageA["🎭 Backstage IDP"] -->|"Trigger buildWithParameters"| JMasterA
+        DevA["👩‍💻 Developer /<br/>Release Manager"] -->|"1. Opens Change Ticket"| ITSMA["📋 ServiceNow / Jira<br/>(Ticket: CHG00123)"]
+        ITSMA -->|"2. Approved: Calls API"| JMasterA["⚙️ Jenkins Master<br/>(REST API Trigger<br/>with Parameters)"]
+        JMasterA -->|"3. Runs Pipeline 02"| JAgentA["🚀 Jenkins Agent Pod<br/>(Holds Cluster Secrets<br/>& Skopeo Engine)"]
+        JAgentA -->|"4. Commits & Syncs"| ArgoA["🐙 ArgoCD Controller"]
+        ArgoA -->|"5. Deploys"| K8sA["☸️ OpenShift PROD"]
+        JAgentA -->|"6. Closes Ticket via API"| ITSMA
+        BackstageA["🎭 Backstage IDP"] -->|"Trigger buildWithParams"| JMasterA
     end
 
     subgraph PureGitOpsITSM["Pattern B: Pure GitOps ITSM & Backstage Flow (This Repository)"]
         direction TB
-        DevB["👩‍💻 Developer / Release Mgr"] -->|"1. Self-Service / Change Approval"| PortalB["🎭 Backstage IDP / 📋 ServiceNow<br/>(Change Ticket CHG00123)"]
-        PortalB -->|"2. Creates / Merges GitOps PR<br/>[Ref: CHG00123]"| GitB["🐙 GitOps Repository (SSOT)<br/>(Protected main/prod branch)"]
-        GitB -->|"3. Native Continuous Reconcile"| ArgoB["🐙 ArgoCD 3.5 Controller<br/>(ApplicationSets & Rollouts)"]
-        ArgoB -->|"4. Progressive Delivery Sync"| K8sB["☸️ OpenShift PROD Cluster"]
+        DevB["👩‍💻 Developer /<br/>Release Manager"] -->|"1. Self-Service / Approval"| PortalB["🎭 Backstage / ServiceNow<br/>(Ticket: CHG00123)"]
+        PortalB -->|"2. Creates / Merges PR<br/>[Ref: CHG00123]"| GitB["🐙 GitOps Repo (SSOT)<br/>(Protected prod branch)"]
+        GitB -->|"3. Continuous Reconcile"| ArgoB["🐙 ArgoCD 3.5 Controller<br/>(AppSets & Rollouts)"]
+        ArgoB -->|"4. Progressive Sync"| K8sB["☸️ OpenShift PROD"]
         
-        ArgoB -.->|"5. ArgoCD Notifications Engine<br/>(Updates Ticket: SUCCESS)"| PortalB
-        ArgoB -.->|"6. Backstage ArgoCD Plugin<br/>(Renders Live Pod Health & Traces)"| PortalB
+        ArgoB -.->|"5. Notifications: SUCCESS"| PortalB
+        ArgoB -.->|"6. ArgoCD Plugin (Health)"| PortalB
     end
 ```
 
@@ -462,26 +462,26 @@ flowchart TB
 sequenceDiagram
     autonumber
     actor Ops as 👩‍💻 Release Manager
-    participant ITSM as 📋 ServiceNow / Jira ITSM
-    participant GitHub as 🐙 GitHub (GitOps Repository)
+    participant ITSM as 📋 ServiceNow / Jira
+    participant GitHub as 🐙 GitHub (GitOps Repo)
     participant Jenkins as 🏗️ Lean Jenkins CI
-    participant ArgoCD as 🐙 ArgoCD 3.5 Controller
-    participant Cluster as ☸️ OpenShift PROD Cluster
+    participant ArgoCD as 🐙 ArgoCD 3.5 Engine
+    participant Cluster as ☸️ OpenShift PROD
 
-    Note over Jenkins: 1. CI Build, Syft SBOM, Trivy Scan & Cosign SLSA 3
-    Jenkins-->>ITSM: Attach Attestation & CVE Report as Evidence to CHG009876
+    Note over Jenkins: 1. CI Build, Syft SBOM,<br/>Trivy Scan & Cosign SLSA 3
+    Jenkins-->>ITSM: Attach Evidence (SBOM & Cosign) to CHG009876
     
-    Ops->>ITSM: Review Evidence & Click 'Approve Change Request'
-    ITSM->>GitHub: Webhook/Action: Merge Promotion PR #89 (CHG009876)
+    Ops->>ITSM: Review Evidence & Approve CHG009876
+    ITSM->>GitHub: Merge Promotion PR #89 (CHG009876)
     
-    GitHub->>ArgoCD: Git Push Event on 'prod' branch
+    GitHub->>ArgoCD: Git Push Event on 'prod'
     activate ArgoCD
-    ArgoCD->>Cluster: Execute Progressive Canary Sync (Argo Rollouts)
-    Cluster-->>ArgoCD: Health Checks HTTP 200 & Error Rate below 0.5%
+    ArgoCD->>Cluster: Execute Progressive Canary (Argo Rollouts)
+    Cluster-->>ArgoCD: Health Checks (HTTP 200 & Error < 0.5%)
     deactivate ArgoCD
     
-    ArgoCD-->>ITSM: ArgoCD Notifications: Update CHG009876 -> Status: CLOSED
-    ArgoCD-->>ITSM: Post Metrics & Deployment Audit Trail
+    ArgoCD-->>ITSM: Notifications: Update CHG009876 -> CLOSED
+    ArgoCD-->>ITSM: Post Deployment Audit & Metrics
 ```
 
 </details>
@@ -702,7 +702,7 @@ sequenceDiagram
     
     Dev->>GitHub: Merge PR #42 into main
     GitHub->>ArgoCD: PR closed event
-    ArgoCD->>Cluster: Automatically tear down 'pr-preview-42' namespace
+    ArgoCD->>Cluster: Tear down namespace 'pr-preview-42'
 ```
 
 </details>
@@ -895,7 +895,9 @@ flowchart LR
         GrafanaDash["Grafana Unified Dashboard<br/>Traces → Logs → Metrics"]
     end
 
-    JTrace --> JBuild --> JSign --> GCommit --> ASync --> AppStart --> HTTPReq
+    JTrace --> JBuild --> JSign
+    JSign --> GCommit --> ASync
+    ASync --> AppStart --> HTTPReq
     PipelineSpan -.->|"OTLP gRPC"| UnifiedGrafana
     GitOpsSpan -.->|"OTLP gRPC"| UnifiedGrafana
     AppRuntimeSpan -.->|"OTLP gRPC"| UnifiedGrafana
