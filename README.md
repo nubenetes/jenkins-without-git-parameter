@@ -158,6 +158,10 @@ By transitioning to the **Pure GitOps pattern (`jenkins-without-git-parameter`)*
 
 ### 1. End-to-End Multi-Cluster Platform Topology
 
+<details>
+<summary>🗺️ <b>Click to expand: End-to-End Multi-Cluster Platform Topology Diagram</b></summary>
+<br/>
+
 ```mermaid
 flowchart TB
     subgraph DeveloperWorkspace["1. Developer & Git Ecosystem (Single Source of Truth)"]
@@ -238,9 +242,15 @@ flowchart TB
     Prom -.->|Metrics Scrape| Grafana
 ```
 
+</details>
+
 ---
 
 ### 2. Jenkins SCM Pre-Execution Lifecycle Blindspot
+
+<details>
+<summary>⚠️ <b>Click to expand: Jenkins SCM Pre-Execution Lifecycle Blindspot Diagram</b></summary>
+<br/>
 
 ```mermaid
 flowchart TB
@@ -268,9 +278,15 @@ flowchart TB
     Gap -.-> RunStage
 ```
 
+</details>
+
 ---
 
 ### 3. Side-by-Side Flow Comparison: Push vs. Pull
+
+<details>
+<summary>🔄 <b>Click to expand: Side-by-Side Architectural Flow (Push vs. Pull)</b></summary>
+<br/>
 
 ```mermaid
 flowchart LR
@@ -293,9 +309,15 @@ flowchart LR
     end
 ```
 
+</details>
+
 ---
 
 ### 4. Dynamic Ephemeral Pull Request (PR) Preview Environments
+
+<details>
+<summary>⚡ <b>Click to expand: Dynamic Ephemeral PR Preview Environments Sequence Diagram</b></summary>
+<br/>
 
 ```mermaid
 sequenceDiagram
@@ -325,9 +347,15 @@ sequenceDiagram
     ArgoCD->>Cluster: Automatically tear down 'pr-preview-42' namespace
 ```
 
+</details>
+
 ---
 
 ### 5. Automated CI -> GitOps Promotion Sequence
+
+<details>
+<summary>🚀 <b>Click to expand: Automated CI -> GitOps Promotion Sequence Diagram</b></summary>
+<br/>
 
 ```mermaid
 sequenceDiagram
@@ -359,9 +387,15 @@ sequenceDiagram
     deactivate ArgoCD
 ```
 
+</details>
+
 ---
 
 ### 6. ArgoCD Multi-Cluster Matrix Reconciliation Engine
+
+<details>
+<summary>⚙️ <b>Click to expand: ArgoCD Multi-Cluster Matrix Reconciliation Engine Diagram</b></summary>
+<br/>
 
 ```mermaid
 flowchart TB
@@ -390,9 +424,15 @@ flowchart TB
     Matrix --> AppPrd -->|Canary Sync Waves| OCPPrd
 ```
 
+</details>
+
 ---
 
 ### 7. Zero-Trust Security & RBAC Boundary Architecture
+
+<details>
+<summary>🛡️ <b>Click to expand: Zero-Trust Security & RBAC Boundary Architecture Diagram</b></summary>
+<br/>
 
 ```mermaid
 flowchart TB
@@ -427,9 +467,15 @@ flowchart TB
     ArgoCD -->|Reconciles State via SA Token| PRD
 ```
 
+</details>
+
 ---
 
 ### 8. Progressive Delivery with Argo Rollouts Canary
+
+<details>
+<summary>📊 <b>Click to expand: Progressive Delivery & Prometheus Metric Analysis Diagram</b></summary>
+<br/>
 
 ```mermaid
 flowchart TB
@@ -452,9 +498,15 @@ flowchart TB
     Step3 --> Step4
 ```
 
+</details>
+
 ---
 
 ### 9. Full-Stack Observability & Trace Context Propagation
+
+<details>
+<summary>🔭 <b>Click to expand: Full-Stack Observability & W3C Trace Context Propagation Diagram</b></summary>
+<br/>
 
 ```mermaid
 flowchart LR
@@ -483,6 +535,8 @@ flowchart LR
     GitOpsSpan -.->|OTLP gRPC| UnifiedGrafana
     AppRuntimeSpan -.->|OTLP gRPC| UnifiedGrafana
 ```
+
+</details>
 
 ---
 
