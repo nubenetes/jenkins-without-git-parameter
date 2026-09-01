@@ -564,19 +564,22 @@ sequenceDiagram
 
 ```mermaid
 flowchart TB
-    subgraph GitOpsSource["1. GitOps Repository (Single Source of Truth)"]
-        Manifests["📁 Workload Overlays<br/>sample-apps/jhipster-microservice/k8s/*"]
-        ClusterList["📋 Cluster Inventory<br/>config/clusters.yaml (dev, staging, prod)"]
+    subgraph GitOpsSource["1. GitOps Repository (SSOT)"]
+        direction TB
+        Manifests["📁 Workload Overlays<br/>k8s/overlays/<br/>(dev, staging, prod)"]
+        ClusterList["📋 Cluster Inventory<br/>config/clusters.yaml<br/>(dev, staging, prod)"]
     end
 
-    subgraph AppSetEngine["2. ArgoCD ApplicationSet Matrix Generator"]
-        Matrix["⚙️ Matrix Generator Engine:<br/>Combines [Clusters] x [Workload Overlays]"]
-        AppDev["Application: jhipster-dev<br/>(targetRevision: main)"]
-        AppStg["Application: jhipster-staging<br/>(targetRevision: staging)"]
-        AppPrd["Application: jhipster-prod<br/>(targetRevision: prod)"]
+    subgraph AppSetEngine["2. ApplicationSet Matrix Generator"]
+        direction TB
+        Matrix["⚙️ Matrix Engine:<br/>Combines [Clusters]<br/>x [Overlays]"]
+        AppDev["Application: jhipster-dev<br/>• targetRevision: main<br/>• namespace: dev-apps"]
+        AppStg["Application: jhipster-staging<br/>• targetRevision: staging<br/>• namespace: staging-apps"]
+        AppPrd["Application: jhipster-prod<br/>• targetRevision: prod<br/>• namespace: prod-apps"]
     end
 
     subgraph TargetClusters["3. Multi-Cluster OpenShift Runtime"]
+        direction TB
         OCPDev["☸️ OCP DEV Cluster<br/>(nubenetes-dev-apps)"]
         OCPStg["☸️ OCP STAGING Cluster<br/>(nubenetes-staging-apps)"]
         OCPPrd["☸️ OCP PROD Cluster<br/>(nubenetes-prod-apps)"]
