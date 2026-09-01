@@ -522,37 +522,38 @@ sequenceDiagram
 
 ```mermaid
 flowchart TB
-    subgraph DeveloperWorkspace["1. Developer & Git Ecosystem (Single Source of Truth)"]
-        Dev["👩‍💻 Developer / Release Ops"]
-        AppRepo["📦 App Code Repository<br/>(jhipster-microservice)"]
-        GitOpsRepo["🌐 GitOps Repository<br/>(jenkins-without-git-parameter)"]
+    subgraph DeveloperWorkspace["1. Developer & Git Ecosystem (SSOT)"]
+        direction TB
+        Dev["👩‍💻 Developer /<br/>Release Manager"]
+        AppRepo["📦 Microservice App<br/>(sample-apps/jhipster)"]
+        GitOpsRepo["🌐 GitOps Repository<br/>(Manifests & Config)"]
         GitHubPR["🔀 GitHub Pull Requests"]
     end
 
-    subgraph OCP_DEV["OpenShift Cluster 1: DEV (Control Plane & Workloads)"]
+    subgraph OCP_DEV["Cluster 1: DEV (Control Plane & Workloads)"]
         direction TB
-        subgraph JenkinsPlatform["Jenkins Controller (Lean CI - Zero Git Parameter)"]
+        subgraph JenkinsPlatform["Jenkins Controller (Lean CI)"]
             Master["Jenkins Controller<br/>(JCasC & Multibranch)"]
             Seed["00-Seed-Job<br/>Provisioner"]
             CIJob["01-Multibranch-CI<br/>(Webhook Triggered)"]
         end
 
-        subgraph Agents["Ephemeral Kubernetes Agent Pods"]
+        subgraph Agents["Ephemeral Agent Pods"]
             MavenAgent["maven-jdk21 Agent<br/>(Build & Test)"]
-            SecurityAgent["security-tools Agent<br/>(Cosign SLSA 3 & Syft)"]
+            SecurityAgent["security-tools Agent<br/>(Cosign & Syft)"]
         end
 
-        subgraph OCPDevRegistry["OCP DEV Internal Registry"]
+        subgraph OCPDevRegistry["Internal Registry (DEV)"]
             DevReg["image-registry:5000<br/>nubenetes-dev-apps"]
         end
 
-        subgraph ArgoCDMaster["ArgoCD 3.5 GitOps Engine"]
+        subgraph ArgoCDMaster["ArgoCD 3.5 Engine"]
             ArgoServer["ArgoCD Server &<br/>ApplicationSets"]
             PRGen["PR Preview Generator"]
             MatrixGen["Cluster Matrix Generator"]
         end
 
-        subgraph ObservabilityStack["Full-Stack Observability"]
+        subgraph ObservabilityStack["Observability Stack"]
             OTel["OpenTelemetry<br/>Collector (OTLP)"]
             Prom["Prometheus<br/>Server"]
             Grafana["Grafana 13.2.0<br/>Dashboards"]
@@ -562,42 +563,42 @@ flowchart TB
         PreviewApps["Ephemeral PR Previews<br/>(pr-preview-*)"]
     end
 
-    subgraph OCP_STG["OpenShift Cluster 2: STAGING (UAT)"]
+    subgraph OCP_STG["Cluster 2: STAGING (UAT)"]
         StgApps["Staging Workloads<br/>(nubenetes-staging-apps)"]
     end
 
-    subgraph OCP_PRD["OpenShift Cluster 3: PROD (High Availability)"]
+    subgraph OCP_PRD["Cluster 3: PROD (High Availability)"]
         PrdApps["Production Workloads<br/>(nubenetes-prod-apps)"]
-        Rollout["Argo Rollouts<br/>(Canary & Prometheus Analysis)"]
+        Rollout["Argo Rollouts<br/>(Canary & Metrics SLA)"]
     end
 
     %% Developer interactions
-    Dev -->|"1. Push Code / Create PR"| AppRepo
-    Dev -->|2. Tag Release or Merge PR| GitOpsRepo
-    AppRepo -.->|Webhook Event| CIJob
-    GitHubPR -.->|PR Webhook| PRGen
+    Dev -->|"1. Push Code / PR"| AppRepo
+    Dev -->|"2. Tag / Merge PR"| GitOpsRepo
+    AppRepo -.->|"Webhook Event"| CIJob
+    GitHubPR -.->|"PR Webhook"| PRGen
 
     %% Jenkins CI Flow
-    CIJob -->|Launches| MavenAgent
-    MavenAgent -->|"Unit/Integration Tests"| MavenAgent
-    MavenAgent -->|Pushes Container Image| DevReg
-    CIJob -->|Launches| SecurityAgent
-    SecurityAgent -->|"Cosign Sign & Syft SBOM"| DevReg
-    SecurityAgent -->|3. Auto-commits Image Digest| GitOpsRepo
+    CIJob -->|"Spawns"| MavenAgent
+    MavenAgent -->|"Run Tests"| MavenAgent
+    MavenAgent -->|"Push Image"| DevReg
+    CIJob -->|"Spawns"| SecurityAgent
+    SecurityAgent -->|"Cosign & Syft"| DevReg
+    SecurityAgent -->|"3. Auto-commit Digest"| GitOpsRepo
 
     %% ArgoCD GitOps Flow
-    GitOpsRepo -->|"Continuous Pull / Reconcile"| ArgoServer
-    ArgoServer -->|"Deploy TargetRevision: main"| DevApps
-    PRGen -->|"Deploy TargetRevision: head_sha"| PreviewApps
-    MatrixGen -->|"Deploy TargetRevision: staging"| StgApps
-    MatrixGen -->|"Deploy TargetRevision: prod"| Rollout
-    Rollout -->|Progressive Delivery| PrdApps
+    GitOpsRepo -->|"Continuous Sync"| ArgoServer
+    ArgoServer -->|"Target: main"| DevApps
+    PRGen -->|"Target: head_sha"| PreviewApps
+    MatrixGen -->|"Target: staging"| StgApps
+    MatrixGen -->|"Target: prod"| Rollout
+    Rollout -->|"Progressive Canary"| PrdApps
 
     %% Observability
-    Master -.->|OTLP Spans| OTel
-    ArgoServer -.->|"Sync Metrics & Logs"| Prom
-    OTel -.->|Traces| Grafana
-    Prom -.->|Metrics Scrape| Grafana
+    Master -.->|"OTLP Spans"| OTel
+    ArgoServer -.->|"Sync Metrics"| Prom
+    OTel -.->|"Traces"| Grafana
+    Prom -.->|"Metrics Scrape"| Grafana
 ```
 
 </details>
@@ -682,23 +683,23 @@ sequenceDiagram
     autonumber
     actor Dev as 👩‍💻 Developer
     participant GitHub as 🐙 GitHub (sample-apps)
-    participant Jenkins as 🏗️ Jenkins Multibranch CI
+    participant Jenkins as 🏗️ Lean Jenkins CI
     participant Registry as 🐳 OpenShift Registry
-    participant ArgoCD as 🐙 ArgoCD ApplicationSet Controller
-    participant Cluster as ☸️ OpenShift DEV Cluster
+    participant ArgoCD as 🐙 ArgoCD AppSets
+    participant Cluster as ☸️ OpenShift DEV
 
-    Dev->>GitHub: Open PR #42 (feature/new-api)
+    Dev->>GitHub: Open PR #42 (feature-branch)
     GitHub->>Jenkins: Webhook: PR #42 created
-    Jenkins->>Jenkins: Run Maven tests, Trivy scan, Cosign sign
-    Jenkins->>Registry: Push image: jhipster-microservice:pr-42-sha7
+    Jenkins->>Jenkins: Build, Trivy scan & Cosign sign
+    Jenkins->>Registry: Push image: app:pr-42-sha7
     
-    GitHub->>ArgoCD: PR Generator polls GitHub API
-    Note over ArgoCD: Discovers PR #42 with label 'preview-environment'
-    ArgoCD->>Cluster: Provision Namespace 'pr-preview-42'
-    ArgoCD->>Cluster: Deploy jhipster-microservice (revision: head_sha)
-    ArgoCD-->>GitHub: Post Preview URL Comment in PR #42
+    GitHub->>ArgoCD: Polling / PR Webhook
+    Note over ArgoCD: Discovers PR #42<br/>label: preview-environment
+    ArgoCD->>Cluster: Create ns 'pr-preview-42'
+    ArgoCD->>Cluster: Deploy app (head_sha)
+    ArgoCD-->>GitHub: Post Preview URL in PR #42
     
-    Dev->>Cluster: Verify feature on live preview environment
+    Dev->>Cluster: Verify on live preview ns
     
     Dev->>GitHub: Merge PR #42 into main
     GitHub->>ArgoCD: PR closed event
@@ -718,30 +719,30 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     autonumber
-    participant GitApp as 📦 App Repository (Code)
-    participant Jenkins as 🏗️ Jenkins Multibranch CI
+    participant GitApp as 📦 App Repo (Code)
+    participant Jenkins as 🏗️ Lean Jenkins CI
     participant Registry as 🐳 OpenShift Registry
-    participant GitOps as 🌐 GitOps Repository (Manifests)
-    participant ArgoCD as 🐙 ArgoCD 3.5 Controller
-    participant OCP as ☸️ OpenShift Clusters (DEV/STG/PROD)
+    participant GitOps as 🌐 GitOps Repo (Manifests)
+    participant ArgoCD as 🐙 ArgoCD 3.5 Engine
+    participant OCP as ☸️ OpenShift (DEV/STG/PROD)
 
     GitApp->>Jenkins: Git Push to 'main'
     activate Jenkins
-    Jenkins->>Jenkins: Checkout & compile Java 21 / Spring Boot 3
+    Jenkins->>Jenkins: Checkout & compile Java 21
     Jenkins->>Jenkins: Execute Unit & Integration Tests
-    Jenkins->>Jenkins: Generate Syft SBOM & Scan with Trivy
-    Jenkins->>Registry: Push container image (digest: sha256:abc1234)
-    Jenkins->>Registry: Sign container image with Cosign SLSA 3
+    Jenkins->>Jenkins: Generate Syft SBOM & Scan (Trivy)
+    Jenkins->>Registry: Push image (sha256:abc1234)
+    Jenkins->>Registry: Sign with Cosign (SLSA 3)
     
-    Jenkins->>GitOps: Execute gitopsCommit(appName, newTag, env)
-    Note over Jenkins,GitOps: Updates kustomization.yaml & commits with Bot identity
+    Jenkins->>GitOps: gitopsCommit(app, tag, env)
+    Note over Jenkins,GitOps: Updates kustomization.yaml<br/>with Bot identity
     deactivate Jenkins
 
-    GitOps->>ArgoCD: Git Webhook / Sync Polling (targetRevision: main)
+    GitOps->>ArgoCD: Webhook / Polling (target: main)
     activate ArgoCD
-    ArgoCD->>ArgoCD: Detect Manifest Diff (Out of Sync)
-    ArgoCD->>OCP: Reconcile & Rollout Deployment to DEV
-    ArgoCD->>OCP: Verify Health Checks (HTTP 200 /actuator/health)
+    ArgoCD->>ArgoCD: Detect Out-of-Sync Manifest Diff
+    ArgoCD->>OCP: Reconcile & Deploy to DEV
+    ArgoCD->>OCP: Verify Health (HTTP 200)
     deactivate ArgoCD
 ```
 
@@ -797,35 +798,38 @@ flowchart TB
 
 ```mermaid
 flowchart TB
-    subgraph UntrustedZone["CI Workload Zone (Least Privilege)"]
+    subgraph UntrustedZone["1. CI Workload Zone (Least Privilege)"]
+        direction TB
         JenkinsMaster["Jenkins Controller<br/>(No Cluster Admin RBAC)"]
-        JenkinsAgent["Ephemeral Agent Pod<br/>(maven-jdk21 / node-angular)"]
-        Registry["Internal Container Registry<br/>(Push Image & Cosign Sig)"]
+        JenkinsAgent["Ephemeral Agent Pod<br/>(maven-jdk21 / security-tools)"]
+        Registry["Internal Registry<br/>(Push Image & Cosign Sig)"]
     end
 
-    subgraph GitOpsTrustZone["GitOps Control Plane (High Privilege)"]
+    subgraph GitOpsTrustZone["2. GitOps Control Plane (High Privilege)"]
+        direction TB
         GitRepo["Git Repository<br/>(Single Source of Truth)"]
-        ArgoCD["ArgoCD 3.5 Control Plane<br/>(Cluster Manager & ApplicationSets)"]
+        ArgoCD["ArgoCD 3.5 Control Plane<br/>(Cluster Manager & AppSets)"]
     end
 
-    subgraph WorkloadClusters["Protected Multi-Cluster OpenShift Runtime"]
+    subgraph WorkloadClusters["3. Protected OpenShift Runtime"]
+        direction TB
         DEV["OCP DEV Cluster<br/>(SCC restricted-v2)"]
         STG["OCP STAGING Cluster<br/>(SCC restricted-v2)"]
         PRD["OCP PROD Cluster<br/>(Canary & Hardened)"]
     end
 
-    JenkinsMaster -->|Spawns| JenkinsAgent
-    JenkinsAgent -->|"Pushes Artifacts & Signatures"| Registry
-    JenkinsAgent -->|Commits Image Digest via GitHub App| GitRepo
+    JenkinsMaster -->|"Spawns"| JenkinsAgent
+    JenkinsAgent -->|"Push Artifacts & Sig"| Registry
+    JenkinsAgent -->|"Commit Digest via Bot"| GitRepo
     
-    JenkinsAgent -.->|"⛔ BLOCKED: No Direct Access"| DEV
-    JenkinsAgent -.->|"⛔ BLOCKED: No Direct Access"| STG
-    JenkinsAgent -.->|"⛔ BLOCKED: No Direct Access"| PRD
+    JenkinsAgent -.->|"⛔ BLOCKED: No Access"| DEV
+    JenkinsAgent -.->|"⛔ BLOCKED: No Access"| STG
+    JenkinsAgent -.->|"⛔ BLOCKED: No Access"| PRD
 
-    GitRepo -->|Continuous Reconciliation| ArgoCD
-    ArgoCD -->|Reconciles State via SA Token| DEV
-    ArgoCD -->|Reconciles State via SA Token| STG
-    ArgoCD -->|Reconciles State via SA Token| PRD
+    GitRepo -->|"Continuous Sync"| ArgoCD
+    ArgoCD -->|"Reconcile via SA Token"| DEV
+    ArgoCD -->|"Reconcile via SA Token"| STG
+    ArgoCD -->|"Reconcile via SA Token"| PRD
 ```
 
 </details>
