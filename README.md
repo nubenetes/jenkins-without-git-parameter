@@ -148,7 +148,7 @@ flowchart TB
         Dev1["👩‍💻 Developer"] -->|1. Opens Jenkins Web UI| JenkinsUI["📋 Jenkins Job Form<br/>(gitParameter Dropdowns)"]
         JenkinsUI -->|2. Queries Remote SCM Refs| SCMQuery["🔍 Jenkins Master SCM Query<br/>(origin-app & origin-vars)"]
         SCMQuery -->|3. Triggers Build| JenkinsAgent1["⚙️ Ephemeral Agent Pod"]
-        JenkinsAgent1 -->|4. Builds & Pushes Image| Reg1["🐳 Container Registry"]
+        JenkinsAgent1 -->|"4. Builds & Pushes Image"| Reg1["🐳 Container Registry"]
         JenkinsAgent1 -->|5. Commits to GitOps Repo| GitOps1["🌐 GitOps Repo (global-vars)"]
         JenkinsAgent1 -->|6. Calls argoAppSync| Argo1["🐙 ArgoCD 3.5 Controller"]
         Argo1 -->|7. Reconciles State| Cluster1["☸️ OpenShift Cluster"]
@@ -156,16 +156,16 @@ flowchart TB
 
     subgraph Pattern2["Pattern 2: Pure GitOps Native Selection (jenkins-without-git-parameter)"]
         direction TB
-        Dev2["👩‍💻 Developer"] -->|1. Git PR / Release Tag (v1.2.0)| Git2["🐙 Git SOT (App & GitOps)"]
-        Git2 -.->|2. Webhook Event (Zero UI Params)| JenkinsCI["🏗️ Lean Jenkins CI<br/>(Multibranch Webhook)"]
-        JenkinsCI -->|3. Compile, Scan & Sign (SLSA 3)| JenkinsCI
+        Dev2["👩‍💻 Developer"] -->|"1. Git PR / Release Tag (v1.2.0)"| Git2["🐙 Git SOT (App & GitOps)"]
+        Git2 -.->|"2. Webhook Event (Zero UI Params)"| JenkinsCI["🏗️ Lean Jenkins CI<br/>(Multibranch Webhook)"]
+        JenkinsCI -->|"3. Compile, Scan & Sign (SLSA 3)"| JenkinsCI
         JenkinsCI -->|4. Pushes Signed Image| Reg2["🐳 Container Registry"]
-        JenkinsCI -->|5. Auto-Commits Tag / Digest| GitOps2["🌐 GitOps Repo (Manifests)"]
+        JenkinsCI -->|"5. Auto-Commits Tag / Digest"| GitOps2["🌐 GitOps Repo (Manifests)"]
         
-        GitOps2 -->|6. Native targetRevision / AppSets| Argo2["🐙 ArgoCD 3.5 Controller"]
+        GitOps2 -->|"6. Native targetRevision / AppSets"| Argo2["🐙 ArgoCD 3.5 Controller"]
         Argo2 -->|7. Continuous Self-Healing Sync| Cluster2["☸️ OpenShift Cluster"]
         
-        Dev2 -.->|Optional: Direct Revision Override| Argo2
+        Dev2 -.->|"Optional: Direct Revision Override"| Argo2
     end
 ```
 
@@ -273,7 +273,7 @@ flowchart TB
 
         AppRepo2 -->|Webhook on Push| Jenkins2
         Jenkins2 -->|Auto-commits tag| GitOpsRepo
-        GitOpsRepo -->|Continuous Pull & Reconcile| ArgoCD
+        GitOpsRepo -->|"Continuous Pull & Reconcile"| ArgoCD
         ArgoCD -->|Declarative Sync| Cluster2
     end
 ```
@@ -379,30 +379,30 @@ flowchart TB
     end
 
     %% Developer interactions
-    Dev -->|1. Push Code / Create PR| AppRepo
+    Dev -->|"1. Push Code / Create PR"| AppRepo
     Dev -->|2. Tag Release or Merge PR| GitOpsRepo
     AppRepo -.->|Webhook Event| CIJob
     GitHubPR -.->|PR Webhook| PRGen
 
     %% Jenkins CI Flow
     CIJob -->|Launches| MavenAgent
-    MavenAgent -->|Unit/Integration Tests| MavenAgent
+    MavenAgent -->|"Unit/Integration Tests"| MavenAgent
     MavenAgent -->|Pushes Container Image| DevReg
     CIJob -->|Launches| SecurityAgent
-    SecurityAgent -->|Cosign Sign & Syft SBOM| DevReg
+    SecurityAgent -->|"Cosign Sign & Syft SBOM"| DevReg
     SecurityAgent -->|3. Auto-commits Image Digest| GitOpsRepo
 
     %% ArgoCD GitOps Flow
-    GitOpsRepo -->|Continuous Pull / Reconcile| ArgoServer
-    ArgoServer -->|Deploy TargetRevision: main| DevApps
-    PRGen -->|Deploy TargetRevision: head_sha| PreviewApps
-    MatrixGen -->|Deploy TargetRevision: staging| StgApps
-    MatrixGen -->|Deploy TargetRevision: prod| Rollout
+    GitOpsRepo -->|"Continuous Pull / Reconcile"| ArgoServer
+    ArgoServer -->|"Deploy TargetRevision: main"| DevApps
+    PRGen -->|"Deploy TargetRevision: head_sha"| PreviewApps
+    MatrixGen -->|"Deploy TargetRevision: staging"| StgApps
+    MatrixGen -->|"Deploy TargetRevision: prod"| Rollout
     Rollout -->|Progressive Delivery| PrdApps
 
     %% Observability
     Master -.->|OTLP Spans| OTel
-    ArgoServer -.->|Sync Metrics & Logs| Prom
+    ArgoServer -.->|"Sync Metrics & Logs"| Prom
     OTel -.->|Traces| Grafana
     Prom -.->|Metrics Scrape| Grafana
 ```
@@ -619,7 +619,7 @@ flowchart TB
     end
 
     JenkinsMaster -->|Spawns| JenkinsAgent
-    JenkinsAgent -->|Pushes Artifacts & Signatures| Registry
+    JenkinsAgent -->|"Pushes Artifacts & Signatures"| Registry
     JenkinsAgent -->|Commits Image Digest via GitHub App| GitRepo
     
     JenkinsAgent -.->|"⛔ BLOCKED: No Direct Access"| DEV
