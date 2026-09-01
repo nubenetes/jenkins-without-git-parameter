@@ -647,22 +647,26 @@ flowchart TB
 
 ```mermaid
 flowchart TB
-    subgraph RolloutController["Argo Rollouts Controller"]
-        Step1["Step 1: Set Canary Weight to 20%"]
-        Step2["Step 2: Prometheus Metric Analysis<br/>(Error Rate below 0.5%)"]
-        Step3["Step 3: Promote Canary Weight to 50%"]
-        Step4["Step 4: Full Production Promotion (100%)"]
+    subgraph RolloutController["1. Argo Rollouts Progressive Engine"]
+        direction TB
+        Step1["1. Initiate Canary<br/>(Set Weight to 20%)"]
+        Step2["2. Prometheus Analysis<br/>• Error Rate below 0.5%<br/>• Latency p95 below 200ms"]
+        Step3["3. Promote Canary<br/>(Set Weight to 50%)"]
+        Step4["4. Full Production<br/>Promotion (100%)"]
+        Abort["🚨 Auto-Rollback<br/>to Stable Version"]
     end
 
-    subgraph RoutingLayer["OpenShift Ingress & Service Router"]
-        StableService["Stable Service<br/>(80% Live Traffic)"]
-        CanaryService["Canary Service<br/>(20% Test Traffic)"]
+    subgraph RoutingLayer["2. OpenShift Ingress & Routing"]
+        direction TB
+        CanaryService["Canary Service Pods<br/>(20% Test Traffic)"]
+        StableService["Stable Service Pods<br/>(80% Live Traffic)"]
     end
 
-    Step1 --> RoutingLayer
-    RoutingLayer --> Step2
-    Step2 -->|Pass| Step3
-    Step2 -->|Fail| Abort["Auto-Rollback to Stable"]
+    Step1 --> CanaryService
+    Step1 --> StableService
+    CanaryService -->|"Metrics Scrape"| Step2
+    Step2 -->|"SLA Passed"| Step3
+    Step2 -->|"SLA Breached"| Abort
     Step3 --> Step4
 ```
 
