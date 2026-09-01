@@ -129,6 +129,59 @@ This repository provides the complete, production-ready **Infrastructure as Code
 
 ## In-Depth Architectural Comparison: Push vs. Pull Model
 
+### 0. The Core Nuance: Jenkins as a Parameter Proxy vs. Native Git & ArgoCD Selection
+
+> [!IMPORTANT]
+> **Understanding the Hybrid Role of ArgoCD in Both Patterns**
+> 
+> * In [`jenkins-git-parameter`](https://github.com/nubenetes/jenkins-git-parameter), ArgoCD was **already used** to synchronize the clusters. However, **Jenkins was acting as a manual Parameter Proxy**: developers had to open the Jenkins UI, use the `git-parameter` plugin dropdown to choose the application branch/tag and global configuration revision, and Jenkins executed a pipeline that committed the change to the GitOps repository before invoking ArgoCD.
+> * In [`jenkins-without-git-parameter`](https://github.com/nubenetes/jenkins-without-git-parameter), **Jenkins is completely removed from the parameter selection and release decision loop**. Developers select parameters **directly in Git (PRs, Git tags, merge events)** or **natively in ArgoCD (ApplicationSets & `targetRevision`)**, and Jenkins acts purely as an automated, parameterless Continuous Integration (CI) build-and-test engine.
+
+<details>
+<summary>🔄 <b>Click to expand: Parameter Flow Comparison Diagram (Jenkins Proxy vs. Pure GitOps)</b></summary>
+<br/>
+
+```mermaid
+flowchart TB
+    subgraph Pattern1["Pattern 1: Jenkins Parameter Proxy (jenkins-git-parameter)"]
+        direction TB
+        Dev1["👩‍💻 Developer"] -->|1. Opens Jenkins Web UI| JenkinsUI["📋 Jenkins Job Form<br/>(gitParameter Dropdowns)"]
+        JenkinsUI -->|2. Queries Remote SCM Refs| SCMQuery["🔍 Jenkins Master SCM Query<br/>(origin-app & origin-vars)"]
+        SCMQuery -->|3. Triggers Build| JenkinsAgent1["⚙️ Ephemeral Agent Pod"]
+        JenkinsAgent1 -->|4. Builds & Pushes Image| Reg1["🐳 Container Registry"]
+        JenkinsAgent1 -->|5. Commits to GitOps Repo| GitOps1["🌐 GitOps Repo (global-vars)"]
+        JenkinsAgent1 -->|6. Calls argoAppSync| Argo1["🐙 ArgoCD 3.5 Controller"]
+        Argo1 -->|7. Reconciles State| Cluster1["☸️ OpenShift Cluster"]
+    end
+
+    subgraph Pattern2["Pattern 2: Pure GitOps Native Selection (jenkins-without-git-parameter)"]
+        direction TB
+        Dev2["👩‍💻 Developer"] -->|1. Git PR / Release Tag (v1.2.0)| Git2["🐙 Git SOT (App & GitOps)"]
+        Git2 -.->|2. Webhook Event (Zero UI Params)| JenkinsCI["🏗️ Lean Jenkins CI<br/>(Multibranch Webhook)"]
+        JenkinsCI -->|3. Compile, Scan & Sign (SLSA 3)| JenkinsCI
+        JenkinsCI -->|4. Pushes Signed Image| Reg2["🐳 Container Registry"]
+        JenkinsCI -->|5. Auto-Commits Tag / Digest| GitOps2["🌐 GitOps Repo (Manifests)"]
+        
+        GitOps2 -->|6. Native targetRevision / AppSets| Argo2["🐙 ArgoCD 3.5 Controller"]
+        Argo2 -->|7. Continuous Self-Healing Sync| Cluster2["☸️ OpenShift Cluster"]
+        
+        Dev2 -.->|Optional: Direct Revision Override| Argo2
+    end
+```
+
+</details>
+
+#### Why Removing Jenkins as the Parameter Proxy is Superior
+
+1. **Elimination of Jenkins SCM Query Bottlenecks**:
+   In Pattern 1, the Jenkins Master had to perform remote Git network calls every time a developer loaded the job page in their browser. For large repositories or high-concurrency environments, this causes UI lag, rate limiting, and SCM timeout errors.
+2. **True Event-Driven Automation**:
+   In Pattern 2, developers never "run a job" in Jenkins. Pushing code or opening a PR automatically produces tested, signed artifacts and updates GitOps manifests.
+3. **Decoupled Responsibilities**:
+   CI (Jenkins) only cares about **validating code and producing immutable signed artifacts**. CD (ArgoCD) only cares about **reconciling declared Git state into cluster runtime state**.
+
+---
+
 ### 1. Comprehensive Comparison Matrix: Jenkins Git Parameter vs. Pure GitOps
 
 | Architectural Dimension | `jenkins-git-parameter` (Imperative Push) | `jenkins-without-git-parameter` (Declarative Pull / Pure GitOps) | Advantage & Recommendation |
