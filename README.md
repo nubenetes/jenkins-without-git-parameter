@@ -246,9 +246,7 @@ flowchart TB
 | **Pipelines in Jenkins** | **2 Pipelines**: `01-ci-build` + `02-release-orchestrator`. | **1 Pipeline**: `01-CI-Build-Pipelines` (Lean Multibranch). |
 | **Downstream Linkage** | Jenkins `build job: '02-CD-Release-Orchestrators/...'`. | **No downstream Jenkins job**. CI commits image tag to Git and terminates. |
 | **Who Orchestrates CD?** | **Jenkins Pipeline 02** (promotes via Skopeo, calls `argoAppSync`). | **ArgoCD 3.5 Controller** (tracks Git and reconciles clusters continuously). |
-| **Environment Targeting** | Chosen in Jenkins parameter dropdown (`TARGET_ENVIRONMENT`). | Driven by **Git Branch / PR**: `main` $
-ightarrow$ DEV, PR/Tag $
-ightarrow$ STAGING/PROD. |
+| **Environment Targeting** | Chosen in Jenkins parameter dropdown (`TARGET_ENVIRONMENT`). | Driven by **Git Branch / PR**: `main` ➔ DEV, PR/Tag ➔ STAGING/PROD. |
 | **Promotion Mechanism** | Pipeline 02 promotes via Skopeo and runs approval gates (`input`). | **Git Pull Request (PR)**: Merging a PR into environment manifests triggers ArgoCD. |
 | **Cluster Credentials** | Stored inside Jenkins agents (`argocd-gitops`). | **Zero cluster credentials in Jenkins**. Only ArgoCD accesses OpenShift. |
 
