@@ -28,7 +28,7 @@
 
 > [!IMPORTANT]
 > ### 🔗 Architecture Paradigm & Linked Repositories
-> This platform implements the **Pure GitOps (Pull-based) Architecture**, serving as the modern alternative to the push-based [`nubenetes/jenkins-git-parameter`](https://github.com/nubenetes/jenkins-git-parameter) pattern:
+> This platform implements the **Pure GitOps (Pull-based) Architecture**, serving as the modern cloud-native alternative to the push-based [`nubenetes/jenkins-git-parameter`](https://github.com/nubenetes/jenkins-git-parameter) pattern:
 > * 🚀 **Pure GitOps Platform Orchestrator (This Repository)**: [**`nubenetes/jenkins-without-git-parameter`**](https://github.com/nubenetes/jenkins-without-git-parameter) — Infrastructure-as-Code, Lean Jenkins JCasC CI, ArgoCD 3.5 ApplicationSets, Native TargetRevision Selection, and OpenTelemetry Observability.
 > * 🌐 **Reference Push-Based Repository**: [**`nubenetes/jenkins-git-parameter`**](https://github.com/nubenetes/jenkins-git-parameter) — Legacy/Push model with Jenkins UI `gitParameter` dropdowns and multi-remote SCM Job DSL.
 > * ☕ **Workload Reference Microservice**: [**`nubenetes/jhipster-microservice`**](https://github.com/nubenetes/jhipster-microservice) — Java 21 / Spring Boot 3 cloud-native microservice with OpenTelemetry and Prometheus integration.
@@ -42,13 +42,16 @@
   - [1. Comprehensive Comparison Matrix: Jenkins Git Parameter vs. Pure GitOps](#1-comprehensive-comparison-matrix-jenkins-git-parameter-vs-pure-gitops)
   - [2. The Root Cause of Jenkins SCM Friction (Why Git Parameter Fails at Scale)](#2-the-root-cause-of-jenkins-scm-friction-why-git-parameter-fails-at-scale)
   - [3. How Git & ArgoCD Solve Parameterization Natively](#3-how-git--argocd-solve-parameterization-natively)
-- [Mermaid Architecture Diagrams & Workflows](#mermaid-architecture-diagrams--workflows)
+- [Comprehensive Mermaid Architecture Diagrams & Workflows](#comprehensive-mermaid-architecture-diagrams--workflows)
   - [1. End-to-End Multi-Cluster Platform Topology](#1-end-to-end-multi-cluster-platform-topology)
-  - [2. Side-by-Side Flow Comparison: Push vs. Pull](#2-side-by-side-flow-comparison-push-vs-pull)
-  - [3. Dynamic Ephemeral Pull Request (PR) Preview Environments](#3-dynamic-ephemeral-pull-request-pr-preview-environments)
-  - [4. Automated CI -> GitOps Promotion Sequence](#4-automated-ci---gitops-promotion-sequence)
-  - [5. Zero-Trust Security & RBAC Boundary Architecture](#5-zero-trust-security--rbac-boundary-architecture)
-  - [6. Full-Stack Observability & Trace Context Propagation](#6-full-stack-observability--trace-context-propagation)
+  - [2. Jenkins SCM Pre-Execution Lifecycle Blindspot](#2-jenkins-scm-pre-execution-lifecycle-blindspot)
+  - [3. Side-by-Side Flow Comparison: Push vs. Pull](#3-side-by-side-flow-comparison-push-vs-pull)
+  - [4. Dynamic Ephemeral Pull Request (PR) Preview Environments](#4-dynamic-ephemeral-pull-request-pr-preview-environments)
+  - [5. Automated CI -> GitOps Promotion Sequence](#5-automated-ci---gitops-promotion-sequence)
+  - [6. ArgoCD Multi-Cluster Matrix Reconciliation Engine](#6-argocd-multi-cluster-matrix-reconciliation-engine)
+  - [7. Zero-Trust Security & RBAC Boundary Architecture](#7-zero-trust-security--rbac-boundary-architecture)
+  - [8. Progressive Delivery with Argo Rollouts Canary](#8-progressive-delivery-with-argo-rollouts-canary)
+  - [9. Full-Stack Observability & Trace Context Propagation](#9-full-stack-observability--trace-context-propagation)
 - [Which Pattern is Easier, Recommended, and Why?](#which-pattern-is-easier-recommended-and-why)
   - [1. Operational Simplicity & Maintenance](#1-operational-simplicity--maintenance)
   - [2. Security Posture & Zero-Trust Compliance](#2-security-posture--zero-trust-compliance)
@@ -113,30 +116,10 @@ This repository provides the complete, production-ready **Infrastructure as Code
 
 ### 2. The Root Cause of Jenkins SCM Friction (Why Git Parameter Fails at Scale)
 
-In the `jenkins-git-parameter` pattern, teams frequently hit three fundamental architectural roadblocks:
-
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│ 1. The Pre-Execution Lifecycle Paradox                                      │
-│                                                                             │
-│ [User Opens UI] ──> [Jenkins Master Job XML] ──> [git-parameter queries Git] │
-│                           │                                                 │
-│                     SCM Blindspot: Stages have not run yet!                 │
-│                     Master cannot see dynamic checkouts in Jenkinsfile.     │
-│                                                                             │
-│ 2. SCM Multi-Remote Binding Bottleneck                                      │
-│                                                                             │
-│ Single Job DSL SCM ──> Attempting 2 gitParameters ──> "No Git Repository"  │
-│ (Requires complex refspec mapping and origin-app / origin-vars workarounds) │
-│                                                                             │
-│ 3. Security Boundary Inversion                                              │
-│                                                                             │
-│ Jenkins Agent holds: [Cluster Admin Tokens] + [ArgoCD Admin Keys] ⚠️        │
-└─────────────────────────────────────────────────────────────────────────────┘
-```
+In the `jenkins-git-parameter` pattern, engineering teams hit three major architectural bottlenecks:
 
 1. **The Pre-Execution vs. Runtime Lifecycle Paradox**:
-   Jenkins renders build parameter dropdowns **before** launching an agent pod, before cloning source code, and before running pipeline stages. Therefore, `git-parameter` can only query Git repositories statically hardcoded into the Jenkins Master's XML configuration.
+   Jenkins renders build parameter dropdowns in the browser **before** launching an agent pod, before cloning source code, and before running pipeline stages. Therefore, `git-parameter` can only query Git repositories statically defined in the Jenkins Master's Job XML configuration.
 2. **The SCM Multi-Remote Binding Bottleneck**:
    Declarative Pipelines (`cpsScm`) were designed for a single primary SCM. When a pipeline needs to select a branch from an application repository (`app-repo`) AND a configuration tag from an environment repository (`global-vars`), Job DSL must configure multi-remote Git refspecs (`origin-app`, `origin-vars`), making jobs brittle and complex.
 3. **Security Inversion**:
@@ -146,7 +129,7 @@ In the `jenkins-git-parameter` pattern, teams frequently hit three fundamental a
 
 ### 3. How Git & ArgoCD Solve Parameterization Natively
 
-By transitioning to the **Pure GitOps pattern (`jenkins-without-git-parameter`)**, parameterization is decoupled from the CI server and moved to the systems built specifically for them:
+By transitioning to the **Pure GitOps pattern (`jenkins-without-git-parameter`)**, parameterization is decoupled from the CI server and moved to native Git and ArgoCD primitives:
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────────────────────┐
@@ -171,7 +154,7 @@ By transitioning to the **Pure GitOps pattern (`jenkins-without-git-parameter`)*
 
 ---
 
-## Mermaid Architecture Diagrams & Workflows
+## Comprehensive Mermaid Architecture Diagrams & Workflows
 
 ### 1. End-to-End Multi-Cluster Platform Topology
 
@@ -257,7 +240,37 @@ flowchart TB
 
 ---
 
-### 2. Side-by-Side Flow Comparison: Push vs. Pull
+### 2. Jenkins SCM Pre-Execution Lifecycle Blindspot
+
+```mermaid
+flowchart TB
+    subgraph UI_Phase["1. Pre-Execution Phase (Master)"]
+        direction TB
+        User["👤 User opens Build UI Form"]
+        Master["⚙️ Jenkins Master reads Job XML SCM"]
+        GitParam["🔍 git-parameter queries remote SCM refs"]
+        Dropdown["📋 Renders Branch/Tag Dropdown"]
+
+        User --> Master --> GitParam --> Dropdown
+    end
+
+    subgraph Runtime_Phase["2. Runtime Execution Phase (Agent)"]
+        direction TB
+        AllocAgent["☸️ Ephemeral Agent Pod Allocated"]
+        RunStage["📦 Pipeline Stage: checkout secondary repo"]
+
+        AllocAgent --> RunStage
+    end
+
+    Gap["⚠️ SCM Blindspot:<br/>Dynamic stage checkouts happen during runtime<br/>and are invisible when rendering parameters!"]
+
+    Dropdown -.-> Gap
+    Gap -.-> RunStage
+```
+
+---
+
+### 3. Side-by-Side Flow Comparison: Push vs. Pull
 
 ```mermaid
 flowchart LR
@@ -282,9 +295,7 @@ flowchart LR
 
 ---
 
-### 3. Dynamic Ephemeral Pull Request (PR) Preview Environments
-
-With **ArgoCD ApplicationSets**, developers do not need any Jenkins dropdowns to preview their feature branches. When a PR is created in GitHub, ArgoCD detects it and dynamically deploys an isolated environment:
+### 4. Dynamic Ephemeral Pull Request (PR) Preview Environments
 
 ```mermaid
 sequenceDiagram
@@ -316,7 +327,7 @@ sequenceDiagram
 
 ---
 
-### 4. Automated CI -> GitOps Promotion Sequence
+### 5. Automated CI -> GitOps Promotion Sequence
 
 ```mermaid
 sequenceDiagram
@@ -350,7 +361,38 @@ sequenceDiagram
 
 ---
 
-### 5. Zero-Trust Security & RBAC Boundary Architecture
+### 6. ArgoCD Multi-Cluster Matrix Reconciliation Engine
+
+```mermaid
+flowchart TB
+    subgraph GitOpsSource["1. GitOps Repository (Single Source of Truth)"]
+        Manifests["sample-apps/jhipster-microservice/k8s/overlays/*"]
+        ClusterList["config/clusters.yaml (dev, staging, prod)"]
+    end
+
+    subgraph AppSetEngine["2. ArgoCD ApplicationSet Matrix Generator"]
+        Matrix["Matrix Generator:<br/>Combines [Clusters] x [Overlays]"]
+        AppDev["Application: jhipster-dev<br/>(targetRevision: main)"]
+        AppStg["Application: jhipster-staging<br/>(targetRevision: staging)"]
+        AppPrd["Application: jhipster-prod<br/>(targetRevision: prod)"]
+    end
+
+    subgraph TargetClusters["3. Multi-Cluster OpenShift Runtime"]
+        OCPDev["☸️ OCP DEV Cluster<br/>(nubenetes-dev-apps)"]
+        OCPStg["☸️ OCP STAGING Cluster<br/>(nubenetes-staging-apps)"]
+        OCPPrd["☸️ OCP PROD Cluster<br/>(nubenetes-prod-apps)"]
+    end
+
+    Manifests --> Matrix
+    ClusterList --> Matrix
+    Matrix --> AppDev -->|Automated Sync| OCPDev
+    Matrix --> AppStg -->|Automated Sync| OCPStg
+    Matrix --> AppPrd -->|Canary Sync Waves| OCPPrd
+```
+
+---
+
+### 7. Zero-Trust Security & RBAC Boundary Architecture
 
 ```mermaid
 flowchart TB
@@ -387,7 +429,32 @@ flowchart TB
 
 ---
 
-### 6. Full-Stack Observability & Trace Context Propagation
+### 8. Progressive Delivery with Argo Rollouts Canary
+
+```mermaid
+flowchart TB
+    subgraph RolloutController["Argo Rollouts Controller"]
+        Step1["Step 1: Set Canary Weight to 20%"]
+        Step2["Step 2: Prometheus Metric Analysis (Error Rate < 0.5%)"]
+        Step3["Step 3: Promote Canary Weight to 50%"]
+        Step4["Step 4: Full Production Promotion (100%)"]
+    end
+
+    subgraph RoutingLayer["OpenShift Ingress & Service Router"]
+        StableService["Stable Service (80% Traffic)"]
+        CanaryService["Canary Service (20% Traffic)"]
+    end
+
+    Step1 --> RoutingLayer
+    RoutingLayer --> Step2
+    Step2 -->|Pass| Step3
+    Step2 -->|Fail| Abort["Auto-Rollback to Stable"]
+    Step3 --> Step4
+```
+
+---
+
+### 9. Full-Stack Observability & Trace Context Propagation
 
 ```mermaid
 flowchart LR
