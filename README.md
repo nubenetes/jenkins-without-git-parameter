@@ -76,6 +76,7 @@
   - [2. The Root Cause of Jenkins SCM Friction (Why Git Parameter Fails at Scale)](#2-the-root-cause-of-jenkins-scm-friction-why-git-parameter-fails-at-scale)
   - [3. How Git & ArgoCD Solve Parameterization Natively](#3-how-git--argocd-solve-parameterization-natively)
   - [4. Why There is No 'jenkins-without-git-parameter-global-vars' Repository (Architectural Rationale)](#4-why-there-is-no-jenkins-without-git-parameter-global-vars-repository-architectural-rationale)
+  - [5. Decoupled Architecture: Docker Images vs. Environment Variables & Placeholders](#5-decoupled-architecture-docker-images-vs-environment-variables--placeholders)
 - [Comprehensive Mermaid Architecture Diagrams & Workflows](#comprehensive-mermaid-architecture-diagrams--workflows)
   - [1. End-to-End Multi-Cluster Platform Topology](#1-end-to-end-multi-cluster-platform-topology)
   - [2. Jenkins SCM Pre-Execution Lifecycle Blindspot](#2-jenkins-scm-pre-execution-lifecycle-blindspot)
@@ -316,6 +317,76 @@ If your organization prefers separating the platform IaC from workload manifests
    * `ci-platform-repo` (`jenkins-without-git-parameter`): Jenkins JCasC, Helm values, and Job DSL.
    * `gitops-manifests-repo` (e.g., `nubenetes/gitops-manifests`): Pure Kubernetes/ArgoCD environment overlays (`dev`, `staging`, `prod`).
    * Notice that even in a polyrepo setup, the repository is named **`gitops-manifests`**, never `jenkins-global-vars`, because it is managed by **ArgoCD**, not Jenkins.
+
+---
+
+### 5. Decoupled Architecture: Docker Images vs. Environment Variables & Placeholders
+
+A key architectural principle in cloud-native design is: **How are Docker images decoupled from environment variables, configuration placeholders, and secrets?**
+
+#### 1. Lifecycle Decoupling (Artifact vs. Configuration)
+
+In Pure GitOps, the executable container image and environment-specific configuration are strictly separated at the architectural and lifecycle layer:
+* **The Docker Image is 100% Environment-Agnostic (12-Factor App)**:
+  - The Java 21 / Spring Boot container contains compiled bytecode (`app.jar`) and the OpenTelemetry agent.
+  - It contains **zero environment endpoints, zero credentials, and zero hardcoded URLs**.
+  - The exact same container image digest (`sha256:abc1234`) promoted from DEV runs unchanged in STAGING and PROD.
+* **Environment Variables & Placeholders Live in GitOps Manifests**:
+  - Environment-specific values (`SPRING_PROFILES_ACTIVE`, database URLs, Vault secret placeholders) live declaratively in Kustomize overlays (`sample-apps/jhipster-microservice/k8s/overlays/{dev,staging,prod}/patch-env.yaml`).
+  - At pod startup, Kubernetes/OpenShift injects these values from ConfigMaps and Secrets reconciled by ArgoCD.
+
+<details>
+<summary>📦 <b>Click to expand: Docker Image vs. Environment Variables Decoupling Lifecycle Diagram</b></summary>
+<br/>
+
+```mermaid
+flowchart LR
+    subgraph BuildTime["1. CI Build Time (Immutable Image)"]
+        direction TB
+        Code["☕ Java 21 Source Code<br/>(Maven Package)"] --> Build["🏗️ Lean Jenkins CI"]
+        Build --> Image["🐳 Immutable Container Image<br/>(Digest: sha256:abc1234)<br/>• ZERO environment endpoints<br/>• ZERO hardcoded secrets"]
+        Image --> Registry["OpenShift Registry"]
+    end
+
+    subgraph Runtime["2. CD GitOps Runtime (Configuration)"]
+        direction TB
+        Overlays["📁 GitOps Environment Manifests<br/>• k8s/overlays/dev/patch-env.yaml<br/>• k8s/overlays/prod/patch-env.yaml<br/>• ConfigMaps / Vault Secrets"]
+        ArgoCD["🐙 ArgoCD 3.5 Controller"]
+        Cluster["☸️ Target OpenShift Cluster"]
+        
+        Overlays --> ArgoCD
+        ArgoCD -->|"Injects Config at Startup"| Cluster
+    end
+
+    Registry -.->|"Pulls Image by Digest"| Cluster
+```
+
+</details>
+
+#### 2. Why This Repository Uses a Unified Platform Monorepo
+
+Rather than fragmenting into 3 separate Git repositories (`app-repo`, `ci-platform-repo`, and `global-vars-repo`), this project organizes them in a cohesive, self-contained **Platform Blueprint**:
+
+1. **1-Click Reproducibility & Portability**:
+   Platform engineers can clone a single repository and execute `./deploy.sh` or `make deploy` to provision Jenkins JCasC, ArgoCD 3.5, ApplicationSets, Observability, and sample microservices with zero broken links.
+2. **Elimination of Jenkins Cross-Repo Parameter Coordination**:
+   In the legacy push model, separate repositories were needed because Jenkins had a manual UI form requiring developers to pick combinations of `(App_Tag, Vars_Tag)`. In Pure GitOps, Jenkins does not coordinate parameters—it is event-driven via webhooks.
+3. **Atomic Versioning & Traceability**:
+   Every commit represents a verified snapshot where Jenkins pod templates (`jcasc/`), pipeline steps (`jenkinsfiles/`), ArgoCD ApplicationSets (`argocd-apps/`), and workload overlays (`sample-apps/`) are guaranteed to be mutually compatible.
+4. **Prevention of Orphaned Remote Dependencies**:
+   Avoids dependency on external standalone repos that might experience breaking changes, access revocations, or deletion.
+
+#### 3. Platform Monorepo Blueprint vs. Enterprise Polyrepo GitOps Matrix
+
+| Architectural Dimension | Platform Monorepo (This Blueprint) | Enterprise Polyrepo GitOps |
+| :--- | :--- | :--- |
+| **Repository Topology** | **1 Cohesive Repository** containing IaC, CI, GitOps manifests, and sample apps. | **2 to 3 Repositories** (`app-microservice`, `ci-platform`, `central-gitops-manifests`). |
+| **Target Audience** | Reference architectures, blueprints, platform teams, PoCs, and fast onboarding. | Large enterprises with strict organization boundaries (Dev Teams vs. Platform Ops). |
+| **Docker Image Decoupling** | **Fully Decoupled**: Image is built environment-agnostic; overlays inject runtime config. | **Fully Decoupled**: Image is built environment-agnostic; overlays inject runtime config. |
+| **Jenkins CI Role** | **Parameterless Multibranch CI**: Builds, scans, signs, and commits tag to local GitOps folder. | **Parameterless Multibranch CI**: Builds, scans, signs, and opens a PR to central GitOps repo. |
+| **Jenkins UI Parameters** | **Zero Parameters** (Pure webhook / event-driven). | **Zero Parameters** (Pure webhook / event-driven). |
+| **ArgoCD GitOps Role** | Reconciles manifests directly from `sample-apps/gitops-manifests/` or overlays. | Reconciles manifests directly from the central `gitops-manifests` repository. |
+| **Rollback & Auditability** | Instant `git revert` or ArgoCD 1-click revision rollback. | Instant `git revert` in the GitOps repo or ArgoCD 1-click revision rollback. |
 
 ---
 
