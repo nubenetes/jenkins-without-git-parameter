@@ -4,7 +4,7 @@ inventory:
     type: backend-service
     framework: spring-boot-3
     jdk: 21
-    repo: https://github.com/nubenetes/jhipster-microservice.git
+    repo: https://github.com/nubenetes/jenkins-without-git-parameter.git
     owner: backend-platform-team
   - id: angular-frontend
     type: frontend-spa

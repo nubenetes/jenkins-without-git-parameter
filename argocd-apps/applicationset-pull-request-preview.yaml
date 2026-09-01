@@ -13,7 +13,7 @@ spec:
     - pullRequest:
         github:
           owner: nubenetes
-          repo: jhipster-microservice
+          repo: jenkins-without-git-parameter
           labels:
             - preview-environment
           tokenRef:
@@ -31,7 +31,7 @@ spec:
     spec:
       project: default
       source:
-        repoURL: https://github.com/nubenetes/jhipster-microservice.git
+        repoURL: https://github.com/nubenetes/jenkins-without-git-parameter.git
         targetRevision: "{{head_sha}}"
         path: k8s/overlays/dev
       destination:

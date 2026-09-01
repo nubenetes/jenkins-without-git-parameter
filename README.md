@@ -64,7 +64,7 @@
 > This platform implements the **Pure GitOps (Pull-based) Architecture**, serving as the modern cloud-native alternative to the push-based [`nubenetes/jenkins-git-parameter`](https://github.com/nubenetes/jenkins-git-parameter) pattern:
 > * 🚀 **Pure GitOps Platform Orchestrator (This Repository)**: [**`nubenetes/jenkins-without-git-parameter`**](https://github.com/nubenetes/jenkins-without-git-parameter) — Infrastructure-as-Code, Lean Jenkins JCasC CI, ArgoCD 3.5 ApplicationSets, Native TargetRevision Selection, and OpenTelemetry Observability.
 > * 🌐 **Reference Push-Based Repository**: [**`nubenetes/jenkins-git-parameter`**](https://github.com/nubenetes/jenkins-git-parameter) — Legacy/Push model with Jenkins UI `gitParameter` dropdowns and multi-remote SCM Job DSL.
-> * ☕ **Workload Reference Microservice**: [**`nubenetes/jhipster-microservice`**](https://github.com/nubenetes/jhipster-microservice) — Java 21 / Spring Boot 3 cloud-native microservice with OpenTelemetry and Prometheus integration.
+> * ☕ **Embedded Workload Microservice**: Located directly within [`sample-apps/jhipster-microservice`](sample-apps/jhipster-microservice) — Java 21 / Spring Boot 3 cloud-native microservice with OpenTelemetry and Prometheus integration.
 
 ---
 
@@ -488,7 +488,7 @@ flowchart LR
 sequenceDiagram
     autonumber
     actor Dev as 👩‍💻 Developer
-    participant GitHub as 🐙 GitHub (jhipster-microservice)
+    participant GitHub as 🐙 GitHub (sample-apps)
     participant Jenkins as 🏗️ Jenkins Multibranch CI
     participant Registry as 🐳 OpenShift Registry
     participant ArgoCD as 🐙 ArgoCD ApplicationSet Controller

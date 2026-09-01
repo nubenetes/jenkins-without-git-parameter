@@ -6,7 +6,7 @@ def apps = [
     [
         name: 'jhipster-microservice',
         description: 'Java 21 / Spring Boot 3 Microservice CI Pipeline',
-        repoUrl: 'https://github.com/nubenetes/jhipster-microservice.git',
+        repoUrl: 'https://github.com/nubenetes/jenkins-without-git-parameter.git',
         jenkinsfile: 'jenkinsfiles/ci/Jenkinsfile.app-java-maven'
     ],
     [
