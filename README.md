@@ -145,25 +145,25 @@ This repository provides the complete, production-ready **Infrastructure as Code
 flowchart TB
     subgraph Pattern1["Pattern 1: Jenkins Parameter Proxy (jenkins-git-parameter)"]
         direction TB
-        Dev1["👩‍💻 Developer"] -->|1. Opens Jenkins Web UI| JenkinsUI["📋 Jenkins Job Form<br/>(gitParameter Dropdowns)"]
-        JenkinsUI -->|2. Queries Remote SCM Refs| SCMQuery["🔍 Jenkins Master SCM Query<br/>(origin-app & origin-vars)"]
-        SCMQuery -->|3. Triggers Build| JenkinsAgent1["⚙️ Ephemeral Agent Pod"]
-        JenkinsAgent1 -->|"4. Builds & Pushes Image"| Reg1["🐳 Container Registry"]
-        JenkinsAgent1 -->|5. Commits to GitOps Repo| GitOps1["🌐 GitOps Repo (global-vars)"]
-        JenkinsAgent1 -->|6. Calls argoAppSync| Argo1["🐙 ArgoCD 3.5 Controller"]
-        Argo1 -->|7. Reconciles State| Cluster1["☸️ OpenShift Cluster"]
+        Dev1["👩‍💻 Developer"] -->|"1. Opens Jenkins UI"| JenkinsUI["📋 Jenkins Job Form<br/>(gitParameter Dropdowns)"]
+        JenkinsUI -->|"2. Queries Remote Refs"| SCMQuery["🔍 Jenkins Master SCM Query<br/>(origin-app & origin-vars)"]
+        SCMQuery -->|"3. Triggers Build"| JenkinsAgent1["⚙️ Ephemeral Agent Pod<br/>(Maven Builder)"]
+        JenkinsAgent1 -->|"4. Builds & Pushes Image"| Reg1["🐳 Container Registry<br/>(Internal Dev Registry)"]
+        JenkinsAgent1 -->|"5. Commits to GitOps Repo"| GitOps1["🌐 GitOps Repo<br/>(jenkins-*-global-vars)"]
+        JenkinsAgent1 -->|"6. Calls argoAppSync"| Argo1["🐙 ArgoCD 3.5 Controller<br/>(Triggers Sync)"]
+        Argo1 -->|"7. Reconciles State"| Cluster1["☸️ OpenShift Cluster<br/>(DEV / STG / PROD)"]
     end
 
     subgraph Pattern2["Pattern 2: Pure GitOps Native Selection (jenkins-without-git-parameter)"]
         direction TB
-        Dev2["👩‍💻 Developer"] -->|"1. Git PR / Release Tag (v1.2.0)"| Git2["🐙 Git SOT (App & GitOps)"]
-        Git2 -.->|"2. Webhook Event (Zero UI Params)"| JenkinsCI["🏗️ Lean Jenkins CI<br/>(Multibranch Webhook)"]
-        JenkinsCI -->|"3. Compile, Scan & Sign (SLSA 3)"| JenkinsCI
-        JenkinsCI -->|4. Pushes Signed Image| Reg2["🐳 Container Registry"]
-        JenkinsCI -->|"5. Auto-Commits Tag / Digest"| GitOps2["🌐 GitOps Repo (Manifests)"]
+        Dev2["👩‍💻 Developer"] -->|"1. Git PR / Release Tag"| Git2["🐙 Git Repository (SSOT)<br/>(App Code & GitOps)"]
+        Git2 -.->|"2. Webhook Event"| JenkinsCI["🏗️ Lean Jenkins CI<br/>(Multibranch Webhook)"]
+        JenkinsCI -->|"3. Build, Scan & Sign"| JenkinsCI
+        JenkinsCI -->|"4. Pushes Signed Image"| Reg2["🐳 Container Registry<br/>(SLSA Level 3)"]
+        JenkinsCI -->|"5. Auto-Commits Tag"| GitOps2["🌐 GitOps Manifests<br/>(Overlays & Clusters)"]
         
-        GitOps2 -->|"6. Native targetRevision / AppSets"| Argo2["🐙 ArgoCD 3.5 Controller"]
-        Argo2 -->|7. Continuous Self-Healing Sync| Cluster2["☸️ OpenShift Cluster"]
+        GitOps2 -->|"6. Native targetRevision"| Argo2["🐙 ArgoCD 3.5 Controller<br/>(ApplicationSets)"]
+        Argo2 -->|"7. Self-Healing Sync"| Cluster2["☸️ OpenShift Cluster<br/>(DEV / STG / PROD)"]
         
         Dev2 -.->|"Optional: Direct Revision Override"| Argo2
     end
@@ -253,28 +253,28 @@ A frequent question when transitioning from the legacy `jenkins-git-parameter` p
 flowchart TB
     subgraph LegacyModel["1. Legacy Push Model (jenkins-git-parameter)"]
         direction TB
-        AppRepo1["📦 app-repo"]
-        GlobalVars1["🌐 jenkins-git-parameter-global-vars<br/>(Created for Jenkins UI Dropdown)"]
+        AppRepo1["📦 App Code Repository<br/>(jhipster-microservice)"]
+        GlobalVars1["🌐 Global Vars Repo<br/>(jenkins-*-global-vars)"]
         Jenkins1["⚙️ Jenkins Master<br/>• Dropdown 1: App Branch<br/>• Dropdown 2: Global Vars Tag"]
-        Cluster1["☸️ Target Clusters"]
+        Cluster1["☸️ Target OpenShift Clusters<br/>(DEV / STG / PROD)"]
 
         AppRepo1 --> Jenkins1
         GlobalVars1 --> Jenkins1
-        Jenkins1 -->|Imperative Push Deploy| Cluster1
+        Jenkins1 -->|"Imperative Push Deploy"| Cluster1
     end
 
     subgraph GitOpsModel["2. Pure GitOps Model (jenkins-without-git-parameter)"]
         direction TB
-        AppRepo2["📦 app-repo"]
-        Jenkins2["🏗️ Jenkins CI (Lean)<br/>• Builds image<br/>• Signs (Cosign SLSA 3)<br/>• Auto-commits image tag"]
-        GitOpsRepo["🌐 GitOps Repo (ArgoCD SSOT)<br/>• clusters.yaml<br/>• overlays/ (dev, staging, prod)"]
-        ArgoCD["🐙 ArgoCD 3.5 Controller"]
-        Cluster2["☸️ Target Clusters"]
+        AppRepo2["📦 App Code Repository<br/>(jhipster-microservice)"]
+        Jenkins2["🏗️ Jenkins CI (Lean)<br/>• Builds container image<br/>• Signs with Cosign SLSA 3<br/>• Auto-commits image tag"]
+        GitOpsRepo["🌐 GitOps Repo (ArgoCD SSOT)<br/>• clusters.yaml<br/>• overlays: dev, staging, prod"]
+        ArgoCD["🐙 ArgoCD 3.5 Controller<br/>(Continuous Sync Engine)"]
+        Cluster2["☸️ Target OpenShift Clusters<br/>(Self-Healing State)"]
 
-        AppRepo2 -->|Webhook on Push| Jenkins2
-        Jenkins2 -->|Auto-commits tag| GitOpsRepo
+        AppRepo2 -->|"Webhook on Push"| Jenkins2
+        Jenkins2 -->|"Auto-commits tag"| GitOpsRepo
         GitOpsRepo -->|"Continuous Pull & Reconcile"| ArgoCD
-        ArgoCD -->|Declarative Sync| Cluster2
+        ArgoCD -->|"Declarative Sync"| Cluster2
     end
 ```
 
@@ -421,23 +421,23 @@ flowchart TB
 flowchart TB
     subgraph UI_Phase["1. Pre-Execution Phase (Master)"]
         direction TB
-        User["👤 User opens Build UI Form"]
-        Master["⚙️ Jenkins Master reads Job XML SCM"]
-        GitParam["🔍 git-parameter queries remote SCM refs"]
-        Dropdown["📋 Renders Branch/Tag Dropdown"]
+        User["👤 User opens<br/>Build UI Form"]
+        Master["⚙️ Jenkins Master<br/>reads Job XML SCM"]
+        GitParam["🔍 git-parameter<br/>queries remote SCM refs"]
+        Dropdown["📋 Renders Branch/Tag<br/>Dropdown in Browser"]
 
         User --> Master --> GitParam --> Dropdown
     end
 
     subgraph Runtime_Phase["2. Runtime Execution Phase (Agent)"]
         direction TB
-        AllocAgent["☸️ Ephemeral Agent Pod Allocated"]
-        RunStage["📦 Pipeline Stage: checkout secondary repo"]
+        AllocAgent["☸️ Ephemeral Agent<br/>Pod Allocated"]
+        RunStage["📦 Pipeline Stage:<br/>checkout secondary repo"]
 
         AllocAgent --> RunStage
     end
 
-    Gap["⚠️ SCM Blindspot:<br/>Dynamic stage checkouts happen during runtime<br/>and are invisible when rendering parameters!"]
+    Gap["⚠️ SCM Blindspot:<br/>Dynamic stage checkouts happen<br/>at runtime on the agent and are<br/>invisible during parameter render!"]
 
     Dropdown -.-> Gap
     Gap -.-> RunStage
@@ -457,20 +457,20 @@ flowchart TB
 flowchart LR
     subgraph PatternA["PATTERN A: Jenkins Git Parameter (Push Model)"]
         direction TB
-        A1["👩‍💻 User Opens Jenkins UI"] --> A2["📋 Selects Branches/Tags in Dropdown"]
-        A2 --> A3["⚙️ Jenkins Master Queries Git SCM"]
-        A3 --> A4["📦 Jenkins Agent Builds Image"]
-        A4 --> A5["🚀 Jenkins Agent Pushes Directly to Cluster (oc apply / argo sync)"]
-        A5 --> A6["⚠️ Problem: Jenkins holds cluster credentials & state drifts"]
+        A1["👩‍💻 User Opens<br/>Jenkins UI"] --> A2["📋 Selects Branches/Tags<br/>in Dropdown"]
+        A2 --> A3["⚙️ Jenkins Master<br/>Queries Git SCM"]
+        A3 --> A4["📦 Jenkins Agent<br/>Builds Image"]
+        A4 --> A5["🚀 Jenkins Agent Pushes<br/>Directly to Cluster<br/>(oc apply / argo sync)"]
+        A5 --> A6["⚠️ Problem: Jenkins holds<br/>cluster secrets & drift occurs"]
     end
 
-    subgraph PatternB["PATTERN B: Pure GitOps (Pull Model - This Repository)"]
+    subgraph PatternB["PATTERN B: Pure GitOps (Pull Model - This Repo)"]
         direction TB
-        B1["👩‍💻 Developer Pushes to Git / Opens PR"] --> B2["⚡ Webhook Triggers Jenkins CI"]
-        B2 --> B3["📦 Jenkins Builds, Scans & Signs Image (SLSA 3)"]
-        B3 --> B4["📝 Jenkins Auto-Commits Tag to GitOps Repo"]
-        B4 --> B5["🔄 ArgoCD Pulls & Reconciles Cluster State"]
-        B5 --> B6["✅ Result: Zero cluster secrets in Jenkins & self-healing state"]
+        B1["👩‍💻 Developer Pushes<br/>to Git / Opens PR"] --> B2["⚡ Webhook Triggers<br/>Jenkins CI"]
+        B2 --> B3["📦 Jenkins Builds, Scans<br/>& Signs Image (SLSA 3)"]
+        B3 --> B4["📝 Jenkins Auto-Commits<br/>Tag to GitOps Repo"]
+        B4 --> B5["🔄 ArgoCD Pulls &<br/>Reconciles Cluster State"]
+        B5 --> B6["✅ Result: Zero cluster secrets<br/>in CI & self-healing drift"]
     end
 ```
 
@@ -565,12 +565,12 @@ sequenceDiagram
 ```mermaid
 flowchart TB
     subgraph GitOpsSource["1. GitOps Repository (Single Source of Truth)"]
-        Manifests["sample-apps/jhipster-microservice/k8s/overlays/*"]
-        ClusterList["config/clusters.yaml (dev, staging, prod)"]
+        Manifests["📁 Workload Overlays<br/>sample-apps/jhipster-microservice/k8s/*"]
+        ClusterList["📋 Cluster Inventory<br/>config/clusters.yaml (dev, staging, prod)"]
     end
 
     subgraph AppSetEngine["2. ArgoCD ApplicationSet Matrix Generator"]
-        Matrix["Matrix Generator:<br/>Combines [Clusters] x [Overlays]"]
+        Matrix["⚙️ Matrix Generator Engine:<br/>Combines [Clusters] x [Workload Overlays]"]
         AppDev["Application: jhipster-dev<br/>(targetRevision: main)"]
         AppStg["Application: jhipster-staging<br/>(targetRevision: staging)"]
         AppPrd["Application: jhipster-prod<br/>(targetRevision: prod)"]
@@ -584,9 +584,9 @@ flowchart TB
 
     Manifests --> Matrix
     ClusterList --> Matrix
-    Matrix --> AppDev -->|Automated Sync| OCPDev
-    Matrix --> AppStg -->|Automated Sync| OCPStg
-    Matrix --> AppPrd -->|Canary Sync Waves| OCPPrd
+    Matrix --> AppDev -->|"Automated Sync"| OCPDev
+    Matrix --> AppStg -->|"Automated Sync"| OCPStg
+    Matrix --> AppPrd -->|"Canary Sync Waves"| OCPPrd
 ```
 
 </details>
@@ -646,14 +646,14 @@ flowchart TB
 flowchart TB
     subgraph RolloutController["Argo Rollouts Controller"]
         Step1["Step 1: Set Canary Weight to 20%"]
-        Step2["Step 2: Prometheus Metric Analysis (Error Rate < 0.5%)"]
+        Step2["Step 2: Prometheus Metric Analysis<br/>(Error Rate below 0.5%)"]
         Step3["Step 3: Promote Canary Weight to 50%"]
         Step4["Step 4: Full Production Promotion (100%)"]
     end
 
     subgraph RoutingLayer["OpenShift Ingress & Service Router"]
-        StableService["Stable Service (80% Traffic)"]
-        CanaryService["Canary Service (20% Traffic)"]
+        StableService["Stable Service<br/>(80% Live Traffic)"]
+        CanaryService["Canary Service<br/>(20% Test Traffic)"]
     end
 
     Step1 --> RoutingLayer
@@ -676,7 +676,7 @@ flowchart TB
 ```mermaid
 flowchart LR
     subgraph PipelineSpan["1. Jenkins CI Span"]
-        JTrace["traceparent: 00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01"]
+        JTrace["W3C Trace Context<br/>traceparent: 00-4bf92f3...-01"]
         JBuild["mvn compile & package"]
         JSign["cosign sign & syft sbom"]
     end
@@ -692,13 +692,13 @@ flowchart LR
     end
 
     subgraph UnifiedGrafana["4. Grafana 13.2.0 Correlation"]
-        GrafanaDash["Grafana Unified Dashboard<br/>Traces ──> Logs ──> Metrics"]
+        GrafanaDash["Grafana Unified Dashboard<br/>Traces → Logs → Metrics"]
     end
 
     JTrace --> JBuild --> JSign --> GCommit --> ASync --> AppStart --> HTTPReq
-    PipelineSpan -.->|OTLP gRPC| UnifiedGrafana
-    GitOpsSpan -.->|OTLP gRPC| UnifiedGrafana
-    AppRuntimeSpan -.->|OTLP gRPC| UnifiedGrafana
+    PipelineSpan -.->|"OTLP gRPC"| UnifiedGrafana
+    GitOpsSpan -.->|"OTLP gRPC"| UnifiedGrafana
+    AppRuntimeSpan -.->|"OTLP gRPC"| UnifiedGrafana
 ```
 
 </details>
