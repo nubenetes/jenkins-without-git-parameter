@@ -15,16 +15,24 @@
 
 <br/>
 
-<!-- Row 2: Architecture & Paradigm -->
-[![Pure GitOps](https://img.shields.io/badge/GitOps-Pure_Declarative_Pull-0052CC.svg?style=flat-square&logo=git&logoColor=white)](https://opengitops.net/)
-[![No Git Parameter](https://img.shields.io/badge/Jenkins-Zero_Git_Parameter-brightgreen.svg?style=flat-square&logo=jenkins)](https://www.jenkins.io/)
-[![ArgoCD ApplicationSets](https://img.shields.io/badge/ArgoCD-ApplicationSets-orange.svg?style=flat-square&logo=argo&logoColor=white)](https://argo-cd.readthedocs.io/en/stable/operator-manual/applicationset/)
-[![Argo Rollouts](https://img.shields.io/badge/Progressive_Delivery-Argo_Rollouts-darkblue.svg?style=flat-square&logo=argo&logoColor=white)](https://argoproj.github.io/argo-rollouts/)
+<!-- Row 2: Developer Portals & Governance / ITSM -->
+[![Backstage IDP](https://img.shields.io/badge/Developer_Portal-Backstage_IDP-9BF0E1.svg?style=flat-square&logo=backstage&logoColor=black)](https://backstage.io/)
+[![ServiceNow ITSM](https://img.shields.io/badge/Change_Management-ServiceNow_ITSM-81B5A1.svg?style=flat-square&logo=servicenow&logoColor=white)](https://www.servicenow.com/products/change-management.html)
+[![Jira ITSM](https://img.shields.io/badge/Governance-Jira_Service_Mgmt-0052CC.svg?style=flat-square&logo=jira&logoColor=white)](https://www.atlassian.com/software/jira/service-management)
+[![Pure GitOps](https://img.shields.io/badge/GitOps-OpenGitOps_Pull-0052CC.svg?style=flat-square&logo=git&logoColor=white)](https://opengitops.net/)
 [![Zero-Trust](https://img.shields.io/badge/Security-Zero--Trust_RBAC-success.svg?style=flat-square&logo=auth0&logoColor=white)](https://csrc.nist.gov/publications/detail/sp/800-207/final)
 
 <br/>
 
-<!-- Row 3: Observability & Tracing -->
+<!-- Row 3: Architecture & Progressive Delivery -->
+[![No Git Parameter](https://img.shields.io/badge/Jenkins-Zero_Git_Parameter-brightgreen.svg?style=flat-square&logo=jenkins)](https://www.jenkins.io/)
+[![ArgoCD ApplicationSets](https://img.shields.io/badge/ArgoCD-ApplicationSets-orange.svg?style=flat-square&logo=argo&logoColor=white)](https://argo-cd.readthedocs.io/en/stable/operator-manual/applicationset/)
+[![Argo Rollouts](https://img.shields.io/badge/Progressive_Delivery-Argo_Rollouts-darkblue.svg?style=flat-square&logo=argo&logoColor=white)](https://argoproj.github.io/argo-rollouts/)
+[![SOX Compliance](https://img.shields.io/badge/Audit-SOX_%2F_SOC2_Auditable-blueviolet.svg?style=flat-square)](https://en.wikipedia.org/wiki/Sarbanes%E2%80%93Oxley_Act)
+
+<br/>
+
+<!-- Row 4: Observability & Tracing -->
 [![OpenTelemetry](https://img.shields.io/badge/OpenTelemetry-OTLP_Tracing-F5A800.svg?style=flat-square&logo=opentelemetry&logoColor=white)](https://opentelemetry.io/)
 [![Prometheus](https://img.shields.io/badge/Metrics-Prometheus-E6522C.svg?style=flat-square&logo=prometheus&logoColor=white)](https://prometheus.io/)
 [![Grafana](https://img.shields.io/badge/Dashboards-Grafana_13.2.0-F46800.svg?style=flat-square&logo=grafana&logoColor=white)](https://grafana.com/)
@@ -32,7 +40,7 @@
 
 <br/>
 
-<!-- Row 4: Supply Chain Security & Hardening -->
+<!-- Row 5: Supply Chain Security & Hardening -->
 [![Cosign SLSA 3](https://img.shields.io/badge/Supply_Chain-Cosign_SLSA_3-purple.svg?style=flat-square&logo=sigstore&logoColor=white)](https://docs.sigstore.dev/cosign/overview/)
 [![Syft SBOM](https://img.shields.io/badge/SBOM-CycloneDX_Syft-blue.svg?style=flat-square&logo=anchore&logoColor=white)](https://github.com/anchore/syft)
 [![Trivy](https://img.shields.io/badge/Security-Trivy_Scan-1904DA.svg?style=flat-square&logo=aqua&logoColor=white)](https://trivy.dev/)
@@ -41,7 +49,7 @@
 
 <br/>
 
-<!-- Row 5: Automation & Tech Stack -->
+<!-- Row 6: Automation & Tech Stack -->
 [![JCasC](https://img.shields.io/badge/Jenkins-JCasC-blue.svg?style=flat-square&logo=jenkins)](https://www.jenkins.io/projects/jcasc/)
 [![Job DSL](https://img.shields.io/badge/Jenkins-Job_DSL-blueviolet.svg?style=flat-square&logo=jenkins)](https://jenkinsci.github.io/job-dsl-plugin/)
 [![Java 21](https://img.shields.io/badge/Java-21_LTS-007396.svg?style=flat-square&logo=openjdk&logoColor=white)](https://openjdk.org/projects/jdk/21/)
@@ -51,7 +59,7 @@
 
 <br/>
 
-<!-- Row 6: Project Health & Status -->
+<!-- Row 7: Project Health & Status -->
 [![CI Status](https://img.shields.io/badge/CI_Build-Passing-brightgreen.svg?style=flat-square&logo=githubactions&logoColor=white)](https://github.com/nubenetes/jenkins-without-git-parameter/actions)
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg?style=flat-square)](LICENSE)
 [![PRs Welcome](https://img.shields.io/badge/PRs-Welcome-brightgreen.svg?style=flat-square)](https://github.com/nubenetes/jenkins-without-git-parameter/pulls)
