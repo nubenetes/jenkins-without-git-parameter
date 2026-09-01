@@ -6,23 +6,56 @@
 
 <div align="center">
 
+<!-- Row 1: Core Platform & Infrastructure -->
 [![OpenShift 4.20+](https://img.shields.io/badge/OpenShift-4.20%2B-EE0000.svg?style=for-the-badge&logo=redhatopenshift&logoColor=white)](https://docs.redhat.com/en/documentation/openshift_container_platform/4.17/)
 [![Kubernetes 1.31+](https://img.shields.io/badge/Kubernetes-1.31%2B-326CE5.svg?style=for-the-badge&logo=kubernetes&logoColor=white)](https://kubernetes.io/)
 [![Jenkins LTS](https://img.shields.io/badge/Jenkins-2.492.2--LTS-D24939.svg?style=for-the-badge&logo=jenkins&logoColor=white)](https://www.jenkins.io/)
 [![ArgoCD](https://img.shields.io/badge/ArgoCD-3.5.0-EF7B4D.svg?style=for-the-badge&logo=argo&logoColor=white)](https://argo-cd.readthedocs.io/en/stable/)
 [![Helm 3](https://img.shields.io/badge/Helm-3.14%2B-0F1689.svg?style=for-the-badge&logo=helm&logoColor=white)](https://helm.sh/)
 
-[![Pure GitOps](https://img.shields.io/badge/GitOps-Pure_Declarative_Pull-blue.svg?style=flat-square&logo=git)](https://opengitops.net/)
-[![No Git Parameter](https://img.shields.io/badge/Jenkins-Zero_Git_Parameter-success.svg?style=flat-square&logo=jenkins)](https://www.jenkins.io/)
-[![ApplicationSets](https://img.shields.io/badge/ArgoCD-ApplicationSets-orange.svg?style=flat-square&logo=argo)](https://argo-cd.readthedocs.io/en/stable/operator-manual/applicationset/)
+<br/>
+
+<!-- Row 2: Architecture & Paradigm -->
+[![Pure GitOps](https://img.shields.io/badge/GitOps-Pure_Declarative_Pull-0052CC.svg?style=flat-square&logo=git&logoColor=white)](https://opengitops.net/)
+[![No Git Parameter](https://img.shields.io/badge/Jenkins-Zero_Git_Parameter-brightgreen.svg?style=flat-square&logo=jenkins)](https://www.jenkins.io/)
+[![ArgoCD ApplicationSets](https://img.shields.io/badge/ArgoCD-ApplicationSets-orange.svg?style=flat-square&logo=argo&logoColor=white)](https://argo-cd.readthedocs.io/en/stable/operator-manual/applicationset/)
+[![Argo Rollouts](https://img.shields.io/badge/Progressive_Delivery-Argo_Rollouts-darkblue.svg?style=flat-square&logo=argo&logoColor=white)](https://argoproj.github.io/argo-rollouts/)
+[![Zero-Trust](https://img.shields.io/badge/Security-Zero--Trust_RBAC-success.svg?style=flat-square&logo=auth0&logoColor=white)](https://csrc.nist.gov/publications/detail/sp/800-207/final)
+
+<br/>
+
+<!-- Row 3: Observability & Tracing -->
 [![OpenTelemetry](https://img.shields.io/badge/OpenTelemetry-OTLP_Tracing-F5A800.svg?style=flat-square&logo=opentelemetry&logoColor=white)](https://opentelemetry.io/)
 [![Prometheus](https://img.shields.io/badge/Metrics-Prometheus-E6522C.svg?style=flat-square&logo=prometheus&logoColor=white)](https://prometheus.io/)
 [![Grafana](https://img.shields.io/badge/Dashboards-Grafana_13.2.0-F46800.svg?style=flat-square&logo=grafana&logoColor=white)](https://grafana.com/)
+[![W3C Tracing](https://img.shields.io/badge/Trace_Context-W3C_Propagation-blueviolet.svg?style=flat-square&logo=w3c&logoColor=white)](https://www.w3.org/TR/trace-context/)
+
+<br/>
+
+<!-- Row 4: Supply Chain Security & Hardening -->
+[![Cosign SLSA 3](https://img.shields.io/badge/Supply_Chain-Cosign_SLSA_3-purple.svg?style=flat-square&logo=sigstore&logoColor=white)](https://docs.sigstore.dev/cosign/overview/)
+[![Syft SBOM](https://img.shields.io/badge/SBOM-CycloneDX_Syft-blue.svg?style=flat-square&logo=anchore&logoColor=white)](https://github.com/anchore/syft)
+[![Trivy](https://img.shields.io/badge/Security-Trivy_Scan-1904DA.svg?style=flat-square&logo=aqua&logoColor=white)](https://trivy.dev/)
+[![SCC restricted-v2](https://img.shields.io/badge/OCP_SCC-restricted--v2-darkred.svg?style=flat-square&logo=redhatopenshift&logoColor=white)](https://docs.redhat.com/en/documentation/openshift_container_platform/4.17/html/authentication_and_authorization/managing-pod-security-policies)
+[![ESO Vault](https://img.shields.io/badge/Secrets-ESO_%2B_Vault-black.svg?style=flat-square&logo=hashicorpvault&logoColor=white)](https://external-secrets.io/)
+
+<br/>
+
+<!-- Row 5: Automation & Tech Stack -->
+[![JCasC](https://img.shields.io/badge/Jenkins-JCasC-blue.svg?style=flat-square&logo=jenkins)](https://www.jenkins.io/projects/jcasc/)
+[![Job DSL](https://img.shields.io/badge/Jenkins-Job_DSL-blueviolet.svg?style=flat-square&logo=jenkins)](https://jenkinsci.github.io/job-dsl-plugin/)
 [![Java 21](https://img.shields.io/badge/Java-21_LTS-007396.svg?style=flat-square&logo=openjdk&logoColor=white)](https://openjdk.org/projects/jdk/21/)
-[![Cosign SLSA 3](https://img.shields.io/badge/Supply_Chain-Cosign_SLSA_3-purple.svg?style=flat-square&logo=sigstore)](https://docs.sigstore.dev/cosign/overview/)
-[![Trivy](https://img.shields.io/badge/Security-Trivy_Scan-1904DA.svg?style=flat-square&logo=aqua)](https://trivy.dev/)
-[![SCC restricted-v2](https://img.shields.io/badge/OCP_SCC-restricted--v2-darkred.svg?style=flat-square&logo=redhatopenshift)](https://docs.redhat.com/en/documentation/openshift_container_platform/4.17/html/authentication_and_authorization/managing-pod-security-policies)
+[![Spring Boot 3](https://img.shields.io/badge/Spring_Boot-3.3.4-6DB33F.svg?style=flat-square&logo=springboot&logoColor=white)](https://spring.io/projects/spring-boot)
+[![Angular 18](https://img.shields.io/badge/Angular-18%2B-DD0031.svg?style=flat-square&logo=angular&logoColor=white)](https://angular.dev/)
+[![Skopeo](https://img.shields.io/badge/Promotion-Skopeo-894191.svg?style=flat-square&logo=redhat&logoColor=white)](https://github.com/containers/skopeo)
+
+<br/>
+
+<!-- Row 6: Project Health & Status -->
+[![CI Status](https://img.shields.io/badge/CI_Build-Passing-brightgreen.svg?style=flat-square&logo=githubactions&logoColor=white)](https://github.com/nubenetes/jenkins-without-git-parameter/actions)
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg?style=flat-square)](LICENSE)
+[![PRs Welcome](https://img.shields.io/badge/PRs-Welcome-brightgreen.svg?style=flat-square)](https://github.com/nubenetes/jenkins-without-git-parameter/pulls)
+[![Maintained](https://img.shields.io/badge/Maintained%3F-Yes-green.svg?style=flat-square)](https://github.com/nubenetes/jenkins-without-git-parameter)
 
 </div>
 
