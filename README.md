@@ -213,6 +213,73 @@ flowchart TB
 
 ---
 
+
+#### ⚖️ Decoupled Push (Pattern 2) vs. Pure GitOps Pull Implementation Analysis
+
+A critical architectural distinction is: **Why does Pure GitOps completely eliminate Pipeline 02 from Jenkins rather than chaining downstream pipelines?**
+
+<details>
+<summary><b>Click to expand: 🔄 Pattern 2 Downstream Push vs. Pure GitOps Event-Driven Pull Diagram</b></summary>
+
+```mermaid
+flowchart TB
+    subgraph LegacyPush["1. Pattern 2: Push"]
+        direction TB
+        CI1["🏗️ Pipeline 01: CI<br/>• Builds Image<br/>• Passes Tag"] -->|"build job: '02-CD...'<br/>(Passes: TARGET_ENV)"| CD1["🚀 Pipeline 02: CD<br/>• Release Lead<br/>• Cluster Secrets"]
+        CD1 -->|"argoAppSync / Skopeo"| Cluster1["☸️ OpenShift (Push)<br/>(DEV / STG / PROD)"]
+    end
+
+    subgraph PureGitOps["2. Pure GitOps"]
+        direction TB
+        CI2["🏗️ Lean CI (Pull)<br/>• Builds & Signs<br/>• Single Pipeline"] -->|"gitopsCommit (Git)"| GitSSOT["🐙 Git Repo (SSOT)<br/>• Overlays<br/>• Image Digests"]
+        GitSSOT -->|"Continuous Sync"| ArgoCD["🐙 ArgoCD 3.5 Engine<br/>• Reconciles State<br/>• Zero CI Secrets"]
+        ArgoCD -->|"Declarative Pull"| Cluster2["☸️ OpenShift (Pull)<br/>(DEV / STG / PROD)"]
+    end
+```
+
+</details>
+
+#### 📋 Key Architectural & Implementation Differences:
+
+| Architectural Dimension | `jenkins-git-parameter` (Pattern 2) | `jenkins-without-git-parameter` (Pure GitOps) |
+| :--- | :--- | :--- |
+| **Pipelines in Jenkins** | **2 Pipelines**: `01-ci-build` + `02-release-orchestrator`. | **1 Pipeline**: `01-CI-Build-Pipelines` (Lean Multibranch). |
+| **Downstream Linkage** | Jenkins `build job: '02-CD-Release-Orchestrators/...'`. | **No downstream Jenkins job**. CI commits image tag to Git and terminates. |
+| **Who Orchestrates CD?** | **Jenkins Pipeline 02** (promotes via Skopeo, calls `argoAppSync`). | **ArgoCD 3.5 Controller** (tracks Git and reconciles clusters continuously). |
+| **Environment Targeting** | Chosen in Jenkins parameter dropdown (`TARGET_ENVIRONMENT`). | Driven by **Git Branch / PR**: `main` $
+ightarrow$ DEV, PR/Tag $
+ightarrow$ STAGING/PROD. |
+| **Promotion Mechanism** | Pipeline 02 promotes via Skopeo and runs approval gates (`input`). | **Git Pull Request (PR)**: Merging a PR into environment manifests triggers ArgoCD. |
+| **Cluster Credentials** | Stored inside Jenkins agents (`argocd-gitops`). | **Zero cluster credentials in Jenkins**. Only ArgoCD accesses OpenShift. |
+
+#### 💻 Code Walkthrough in Pure GitOps CI Pipeline:
+
+In [`jenkinsfiles/ci/Jenkinsfile.app-java-maven`](jenkinsfiles/ci/Jenkinsfile.app-java-maven), the pipeline ends immediately after signing the container image and writing the digest to Git—completely removing downstream job invocations:
+
+```groovy
+stage('GitOps Automatic Sync (Update Git Repository)') {
+    steps {
+        script {
+            def targetEnv = (env.BRANCH_NAME == 'main') ? 'dev' : ((env.BRANCH_NAME == 'staging' || env.TAG_NAME) ? 'staging' : 'dev')
+            echo "📝 Updating GitOps Repository for environment: ${targetEnv} with new image tag: ${env.IMAGE_TAG}"
+            
+            // Jenkins writes directly to Git, then terminates.
+            gitopsCommit(
+                appName: env.APP_NAME,
+                imageTag: env.IMAGE_TAG,
+                envName: targetEnv,
+                commitMsg: "chore(gitops): promote ${env.APP_NAME} to ${env.IMAGE_TAG} for ${targetEnv} [skip ci]"
+            )
+        }
+    }
+}
+```
+
+> **💡 Architectural Summary & Conclusion**:
+> Retiring Pipeline 02 completes the cloud-native transition. Jenkins is restored to its core strength as a fast, isolated CI build and test engine, while ArgoCD assumes full ownership of deployment orchestration, continuous drift correction, and zero-trust multi-cluster delivery.
+
+---
+
 ### 1. Comprehensive Comparison Matrix: Jenkins Git Parameter vs. Pure GitOps
 
 | Architectural Dimension | `jenkins-git-parameter` (Imperative Push) | `jenkins-without-git-parameter` (Declarative Pull / Pure GitOps) | Advantage & Recommendation |
