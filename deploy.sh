@@ -29,15 +29,29 @@ kubectl create configmap jenkins-pod-templates-config \
   --namespace=jenkins \
   --dry-run=client -o yaml | kubectl apply -f - || true
 
+kubectl create configmap jenkins-github-credentials \
+  --from-file=github-app-credentials.yaml="${SCRIPT_DIR}/jcasc/github-app-credentials.yaml" \
+  --namespace=jenkins \
+  --dry-run=client -o yaml | kubectl apply -f - || true
+
 kubectl create configmap jenkins-jobdsl-scripts \
   --from-file="${SCRIPT_DIR}/jobdsl" \
   --namespace=jenkins \
   --dry-run=client -o yaml | kubectl apply -f - || true
 
-kubectl apply -f "${SCRIPT_DIR}/config/clusters.yaml" || true
+kubectl create configmap nubenetes-cluster-topology \
+  --from-file=clusters.yaml="${SCRIPT_DIR}/config/clusters.yaml" \
+  --namespace=jenkins \
+  --dry-run=client -o yaml | kubectl apply -f - || true
 
 # Step 3: Deploy Observability Stack (OTel Collector, Prometheus, Grafana)
 echo "===> [3/6] Deploying OpenTelemetry Collector, Prometheus & Grafana..."
+kubectl create namespace observability --dry-run=client -o yaml | kubectl apply -f - || true
+kubectl create configmap grafana-dashboards \
+  --from-file="${SCRIPT_DIR}/observability/dashboards" \
+  --namespace=observability \
+  --dry-run=client -o yaml | kubectl apply -f - || true
+
 if command -v helm &>/dev/null; then
     helm repo add open-telemetry https://open-telemetry.github.io/opentelemetry-helm-charts --force-update || true
     helm repo add prometheus-community https://prometheus-community.github.io/helm-charts --force-update || true

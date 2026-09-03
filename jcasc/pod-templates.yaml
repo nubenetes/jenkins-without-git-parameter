@@ -76,14 +76,7 @@ jenkins:
             containers:
               - name: "jnlp"
                 image: "jenkins/inbound-agent:3283.v92c105e0f819-1-jdk21"
-              - name: "cosign-syft"
-                image: "cgr.dev/chainguard/cosign:latest"
-                command: "cat"
-                ttyEnabled: true
-                workingDir: "/home/jenkins/agent"
-                resourceRequestCpu: "200m"
-                resourceLimitCpu: "1000m"
-              - name: "trivy"
+              - name: "security-tools"
                 image: "aquasec/trivy:0.59.1"
                 command: "cat"
                 ttyEnabled: true

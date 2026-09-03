@@ -25,6 +25,9 @@ controller:
     - name: pod-templates-config
       configMap:
         name: jenkins-pod-templates-config
+    - name: github-credentials-config
+      configMap:
+        name: jenkins-github-credentials
     - name: jobdsl-scripts
       configMap:
         name: jenkins-jobdsl-scripts
@@ -41,8 +44,12 @@ controller:
       mountPath: /var/jenkins_home/casc_configs/pod-templates.yaml
       subPath: pod-templates.yaml
       readOnly: true
+    - name: github-credentials-config
+      mountPath: /var/jenkins_home/casc_configs/github-app-credentials.yaml
+      subPath: github-app-credentials.yaml
+      readOnly: true
     - name: cluster-topology
-      mountPath: /var/jenkins_home/casc_configs/clusters.yaml
+      mountPath: /var/jenkins_home/config/clusters.yaml
       subPath: clusters.yaml
       readOnly: true
     - name: jobdsl-scripts

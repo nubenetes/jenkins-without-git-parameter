@@ -4,7 +4,7 @@ def call(Map config = [:]) {
     def format      = config.format      ?: 'cyclonedx-json'
 
     echo "===> [SBOM] Generating ${format} Software Bill of Materials for ${imageRef}..."
-    container('skopeo-trivy') {
+    container('security-tools') {
         sh """
             mkdir -p \$(dirname ${outputFile})
             if command -v syft >/dev/null 2>&1; then

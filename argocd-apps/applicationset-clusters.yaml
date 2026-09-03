@@ -1,30 +1,23 @@
 # ==============================================================================
-# ArgoCD ApplicationSet: Multi-Cluster Matrix Generator
+# ArgoCD ApplicationSet: Multi-Cluster Environment Generator
 # Deploys applications across DEV, STAGING, and PROD clusters automatically
 # ==============================================================================
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
-  name: matrix-multicluster-workloads
+  name: multicluster-workloads
   namespace: argocd
 spec:
   generators:
-    - matrix:
-        generators:
-          # Cluster Generator: Discovers all registered OpenShift clusters
-          - clusters:
-              selector:
-                matchLabels:
-                  environment: "{{metadata.labels.environment}}"
-          # Git Generator: Discovers all workloads in gitops-manifests
-          - git:
-              repoURL: https://github.com/nubenetes/jenkins-without-git-parameter.git
-              revision: main
-              directories:
-                - path: sample-apps/jhipster-microservice/k8s/overlays/*
+    # Cluster Generator: Discovers registered OpenShift clusters by environment label
+    - clusters:
+        selector:
+          matchExpressions:
+            - key: environment
+              operator: Exists
   template:
     metadata:
-      name: "{{path.basename}}-{{name}}"
+      name: "jhipster-microservice-{{metadata.labels.environment}}"
       namespace: argocd
       labels:
         environment: "{{metadata.labels.environment}}"
@@ -33,8 +26,8 @@ spec:
       project: default
       source:
         repoURL: https://github.com/nubenetes/jenkins-without-git-parameter.git
-        targetRevision: "{{metadata.labels.environment}}"
-        path: "{{path}}"
+        targetRevision: main
+        path: "sample-apps/jhipster-microservice/k8s/overlays/{{metadata.labels.environment}}"
       destination:
         server: "{{server}}"
         namespace: "nubenetes-{{metadata.labels.environment}}-apps"

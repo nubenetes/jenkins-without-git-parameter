@@ -1,0 +1,65 @@
+# Changelog
+
+All notable changes to the **Jenkins Without Git Parameter (Pure GitOps)** project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+---
+
+## [1.0.0] - 2026-09-03
+
+### Summary
+Initial production-ready release of the **Jenkins Without Git Parameter** enterprise reference platform on **Red Hat OpenShift 4.20+** and **Kubernetes 1.31+**. Reviewed, audited, and hardened using **Gemini 3.8 Flash**.
+
+This release establishes the **Pure GitOps** paradigm: continuous integration is handled by a zero-parameter lean Jenkins controller, while continuous delivery, target environment routing, and multi-cluster parameterization are executed declaratively by **ArgoCD 3.5 ApplicationSets** and **Git as the Single Source of Truth (SSOT)**.
+
+---
+
+### 🚀 Added
+- **Dynamic Cluster Topology Mounting**:
+  - `deploy.sh` provisions `nubenetes-cluster-topology` ConfigMap from `config/clusters.yaml`.
+  - Configured mount path under `/var/jenkins_home/config/clusters.yaml` in `helm/jenkins/values-openshift.yaml`, keeping non-CasC configuration separate from CasC configuration.
+- **JCasC GitHub App Credentials Integration**:
+  - Created `jenkins-github-credentials` ConfigMap from `jcasc/github-app-credentials.yaml` in `deploy.sh`.
+  - Mounted credentials into `/var/jenkins_home/casc_configs/github-app-credentials.yaml` for automated SCM discovery.
+- **Automated PR Preview Token Provisioning**:
+  - Added automated creation of `github-token-secret` in namespace `argocd` via `scripts/generate-tokens.sh`.
+- **Pre-Packaged Grafana Observability Dashboards**:
+  - Provisioned `grafana-dashboards` ConfigMap in namespace `observability` bundling all dashboards (`observability/dashboards/*.json`).
+  - Configured `extraConfigmapMounts` in `helm/observability/grafana-values.yaml` to load dashboards into `/var/lib/grafana/dashboards/custom`.
+- **Multi-Cluster Declarative Registrations**:
+  - Registered DEV (`in-cluster`), STAGING (`ocp-staging-cluster`), and PROD (`ocp-prod-cluster`) cluster secrets in `scripts/setup-argocd-clusters.sh` with standardized `environment` labels.
+- **Resilient GitOps Repository Automation**:
+  - Added automatic cloning and fallback repository initialization to `shared-library/vars/gitopsCommit.groovy`.
+
+---
+
+### 🛠️ Fixed
+- **Purged `git-parameter` Remnants**:
+  - Removed `git-parameter:0.10.0` from `installPlugins` in `helm/jenkins/values.yaml` and pinned `github:1.40.0` and `github-branch-source:1802.v26c6d00e998a_`.
+  - Updated `helm/jenkins/Chart.yaml` description to remove references to the Git Parameter plugin.
+- **Resolved JCasC Boot Crashing**:
+  - Moved cluster topology volume mount out of `/var/jenkins_home/casc_configs/` to prevent JCasC parser errors on unrecognized root elements.
+- **Fixed ArgoCD Multi-Cluster ApplicationSet Generator**:
+  - Rewrote `argocd-apps/applicationset-clusters.yaml` to use standard cluster generators with label selectors, eliminating invalid self-referencing template strings.
+  - Aligned overlay paths to `sample-apps/jhipster-microservice/k8s/overlays/{{metadata.labels.environment}}`, eliminating unintended Cartesian product deployments across clusters.
+- **Fixed Ephemeral PR Preview Path**:
+  - Corrected invalid path `k8s/overlays/dev` to `sample-apps/jhipster-microservice/k8s/overlays/dev` in `argocd-apps/applicationset-pull-request-preview.yaml`.
+- **Modernized Grafana ArgoCD Application**:
+  - Updated `argocd-apps/apps/dev/grafana-observability.yaml` to use ArgoCD multi-source, pulling the official Grafana Helm chart alongside local values from Git.
+- **Aligned Ephemeral Pod Templates with Shared Library Steps**:
+  - Updated `jcasc/pod-templates.yaml` to configure `security-tools` container running `aquasec/trivy:0.59.1`.
+  - Updated `shared-library/vars/cosignSign.groovy` and `shared-library/vars/sbomGenerate.groovy` to reference `container('security-tools')`.
+- **Enhanced Script Portability**:
+  - Fixed relative directory assumptions in `destroy.sh` and `scripts/gitops-promote.sh` using dynamic `SCRIPT_DIR` and `REPO_ROOT` resolution.
+- **Modernized Kustomize Overlays**:
+  - Replaced deprecated `bases:` with `resources:` in `sample-apps/jhipster-microservice/k8s/overlays/*/kustomization.yaml`.
+
+---
+
+### 🧹 Removed
+- **Redundant Directory**:
+  - Removed orphaned duplicate directory `sample-apps/nubenetes-global-vars/`.
+- **Contradictory Documentation**:
+  - Cleaned `sample-apps/gitops-manifests/README.md` to remove all legacy references to `jenkins-git-parameter` and obsolete release orchestrators.

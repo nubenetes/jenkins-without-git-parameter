@@ -6,6 +6,28 @@ set -euo pipefail
 
 echo "===> Registering Multi-Cluster secrets in ArgoCD 3.5..."
 
+# Cluster 1: OCP DEV (In-Cluster)
+cat << 'SECRET' | kubectl apply -f -
+apiVersion: v1
+kind: Secret
+metadata:
+  name: cluster-ocp-dev
+  namespace: argocd
+  labels:
+    argocd.argoproj.io/secret-type: cluster
+    environment: dev
+type: Opaque
+stringData:
+  name: in-cluster
+  server: https://kubernetes.default.svc
+  config: |
+    {
+      "tlsClientConfig": {
+        "insecure": false
+      }
+    }
+SECRET
+
 # Cluster 2: OCP STAGING
 cat << 'SECRET' | kubectl apply -f -
 apiVersion: v1
@@ -15,6 +37,7 @@ metadata:
   namespace: argocd
   labels:
     argocd.argoproj.io/secret-type: cluster
+    environment: staging
 type: Opaque
 stringData:
   name: ocp-staging-cluster
@@ -36,6 +59,7 @@ metadata:
   namespace: argocd
   labels:
     argocd.argoproj.io/secret-type: cluster
+    environment: prod
 type: Opaque
 stringData:
   name: ocp-prod-cluster

@@ -54,7 +54,8 @@ controller:
   installPlugins:
     - "git:5.7.0"
     - "git-client:6.1.2"
-    - "git-parameter:0.10.0"
+    - "github:1.40.0"
+    - "github-branch-source:1802.v26c6d00e998a_"
     - "configuration-as-code:1932.v652924373400"
     - "job-dsl:1.89"
     - "workflow-aggregator:600.vb_57cdd26fdd7"

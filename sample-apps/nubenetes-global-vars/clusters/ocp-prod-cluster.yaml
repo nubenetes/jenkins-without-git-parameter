@@ -1,6 +1,0 @@
-clusterName: ocp-prod
-region: europe-west1
-environment: prod
-apiServer: https://api.ocp-prod.nubenetes.internal:6443
-ingressDomain: apps.ocp-prod.nubenetes.internal
-internalRegistry: image-registry.openshift-image-registry.svc:5000

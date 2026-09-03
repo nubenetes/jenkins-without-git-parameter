@@ -4,11 +4,13 @@
 # ==============================================================================
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 echo "======================================================================"
 echo "🧹 DECOMMISSIONING PLATFORM: Jenkins Without Git Parameter"
 echo "======================================================================"
 
-kubectl delete -f argocd-apps/ --ignore-not-found || true
+kubectl delete -f "${SCRIPT_DIR}/argocd-apps/" --ignore-not-found || true
 
 if command -v helm &>/dev/null; then
     helm uninstall jenkins -n jenkins || true

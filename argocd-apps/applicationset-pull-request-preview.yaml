@@ -33,7 +33,7 @@ spec:
       source:
         repoURL: https://github.com/nubenetes/jenkins-without-git-parameter.git
         targetRevision: "{{head_sha}}"
-        path: k8s/overlays/dev
+        path: sample-apps/jhipster-microservice/k8s/overlays/dev
       destination:
         server: https://kubernetes.default.svc
         namespace: "pr-preview-{{number}}"

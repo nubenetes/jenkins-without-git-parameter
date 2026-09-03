@@ -10,7 +10,7 @@ def call(Map config = [:]) {
     echo "Secret KeyRef: ${keySecretRef}"
     echo "================================================================="
 
-    container('skopeo-trivy') {
+    container('security-tools') {
         // 1. Sign Image
         echo "===> [1/3] Signing container image with Cosign..."
         sh """

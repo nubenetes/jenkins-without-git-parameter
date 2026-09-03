@@ -41,14 +41,11 @@ dashboardProviders:
         options:
           path: /var/lib/grafana/dashboards/custom
 
-dashboards:
-  custom:
-    jenkins-performance:
-      file: dashboards/jenkins-performance-otel.json
-    argocd-gitops:
-      file: dashboards/argocd-gitops-sync.json
-    workload-correlation:
-      file: dashboards/app-full-stack-correlation.json
+extraConfigmapMounts:
+  - name: grafana-dashboards-mount
+    configMap: grafana-dashboards
+    mountPath: /var/lib/grafana/dashboards/custom
+    readOnly: true
 
 serviceAccount:
   create: true

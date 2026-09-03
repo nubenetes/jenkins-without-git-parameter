@@ -8,10 +8,16 @@ metadata:
     environment: dev
 spec:
   project: default
-  source:
-    repoURL: 'https://github.com/nubenetes/jenkins-without-git-parameter.git'
-    targetRevision: main
-    path: helm/observability
+  sources:
+    - repoURL: 'https://grafana.github.io/helm-charts'
+      chart: grafana
+      targetRevision: '8.5.1'
+      helm:
+        valueFiles:
+          - '$values/helm/observability/grafana-values.yaml'
+    - repoURL: 'https://github.com/nubenetes/jenkins-without-git-parameter.git'
+      targetRevision: main
+      ref: values
   destination:
     server: 'https://kubernetes.default.svc'
     namespace: observability

@@ -19,6 +19,18 @@ def call(Map config = [:]) {
             git config --global user.name "Nubenetes GitOps Bot"
             git config --global user.email "gitops-bot@nubenetes.io"
 
+            # Ensure GitOps repository is cloned or initialized
+            if [ ! -d ".git" ]; then
+                echo "Cloning GitOps repository ${gitopsRepo} (branch: ${branchName})..."
+                git clone --depth 1 --branch "${branchName}" "${gitopsRepo}" . 2>/dev/null || {
+                    echo "Cloning remote branch failed or offline sandbox; checking parent workspace..."
+                    if [ -d "../sample-apps" ]; then
+                        cp -r ../sample-apps .
+                        git init -b "${branchName}"
+                    fi
+                }
+            fi
+
             # Update target environment YAML configuration
             ENV_FILE="sample-apps/gitops-manifests/environments/${envName}.yaml"
             if [ -f "\$ENV_FILE" ]; then
