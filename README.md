@@ -122,6 +122,7 @@
   - [2. Verify Platform Endpoints](#2-verify-platform-endpoints)
   - [3. Day-2 GitOps Scenarios & Branch/Tag Selection](#3-day-2-gitops-scenarios--branchtag-selection)
 - [Decommissioning & Reinstallation](#decommissioning--reinstallation)
+- [Video Walkthroughs & Architecture References (YouTube)](#video-walkthroughs--architecture-references-youtube)
 - [References & Evidence Links](#references--evidence-links)
 
 ---
@@ -1378,6 +1379,68 @@ To execute a complete clean wipe and fresh redeployment:
 # or
 make reinstall
 ```
+
+---
+
+## Video Walkthroughs & Architecture References (YouTube)
+
+Architectural deep dives, video walkthroughs, and technical shorts for `jenkins-without-git-parameter` and multi-cluster Pure GitOps on OpenShift 4.20+ are hosted on the **[Nubenetes YouTube Channel (@nubenetes)](https://www.youtube.com/@nubenetes)**.
+
+<details open>
+<summary>📂 <strong>Full-Length Technical Deep Dives & Explanations</strong></summary>
+
+<br/>
+
+##### Two Repo GitOps with ArgoCD: Decoupling CI from CD
+- 🔗 **Link**: [https://www.youtube.com/watch?v=6cPI6jt3abw](https://www.youtube.com/watch?v=6cPI6jt3abw)
+- 🌐 **Language**: English (Original Audio)
+- ⏱️ **Duration**: 10:28
+- 🏷️ **Domain**: GitOps State Machine & Multi-Cluster Parameterization
+- 📝 **Full Description**:
+> 🚀 In-depth architectural analysis of the Two-Repo GitOps state machine, explaining why separating Application Code from Desired Infrastructure State is crucial for enterprise security and stability.
+>
+> 📌 Core Discussion Points:
+> • The Push vs. Pull Dilemma: Why direct CI-to-cluster push creates massive security vulnerabilities.
+> • The Decoupled Two-Repo Pattern: Repository 1 (App Source Code + CI) strictly separated from Repository 2 (GitOps Desired State + Manifests).
+> • Scaling with ArgoCD 3.5+ ApplicationSets: Dynamically templating multi-environment clusters using Git and Matrix generators with dynamic branch tracking.
+> • Eliminating YAML Sprawl: How Git and ArgoCD solve parameterization natively without Jenkins parameter plugins.
+
+</details>
+
+<details open>
+<summary>📂 <strong>Architecture Video Shorts & Guides</strong></summary>
+
+<br/>
+
+### 📑 Quick Index Matrix
+
+| # | Short Title | Domain / Pillar | Duration | Direct Link |
+|---|---|---|---|---|
+| 1 | [How Multi Cluster GitOps Works](https://www.youtube.com/shorts/idLvUjllX04) | Hub-and-Spoke Topology | `1:07` | [▶️ Watch](https://www.youtube.com/shorts/idLvUjllX04) |
+| 2 | [How GitOps Secures Deployments](https://www.youtube.com/shorts/LcHLwrJ2950) | Pull vs Push Isolation | `1:06` | [▶️ Watch](https://www.youtube.com/shorts/LcHLwrJ2950) |
+| 3 | [CI CD GitOps OpenShift 4](https://www.youtube.com/watch?v=b2FyV4t19-g) | OpenShift 4.20+ Architecture | `7:16` | [▶️ Watch](https://www.youtube.com/watch?v=b2FyV4t19-g) |
+
+<br/>
+
+##### 1. How Multi Cluster GitOps Works
+- 🔗 **Link**: [https://www.youtube.com/shorts/idLvUjllX04](https://www.youtube.com/shorts/idLvUjllX04)
+- ⏱️ **Duration**: 1:07
+- 📝 **Full Description**:
+> 🚀 How the GitOps hub-and-spoke model safely updates highly restricted multi-cluster networks without sharing admin keys, matching the multi-cluster topology implemented in this repository.
+
+##### 2. How GitOps Secures Deployments
+- 🔗 **Link**: [https://www.youtube.com/shorts/LcHLwrJ2950](https://www.youtube.com/shorts/LcHLwrJ2950)
+- ⏱️ **Duration**: 1:06
+- 📝 **Full Description**:
+> 🚀 Why giving your CI build server keys to your production Kubernetes cluster is a massive security risk—and how Pure GitOps completely severs the direct connection.
+
+##### 3. CI CD GitOps OpenShift 4
+- 🔗 **Link**: [https://www.youtube.com/watch?v=b2FyV4t19-g](https://www.youtube.com/watch?v=b2FyV4t19-g)
+- ⏱️ **Duration**: 7:16
+- 📝 **Full Description**:
+> 🚀 Análisis técnico detallado sobre cómo diseñar e implementar una estrategia de automatización GitOps empresarial sobre Red Hat OpenShift 4.20+, Buildah, Skopeo y ArgoCD.
+
+</details>
 
 ---
 
