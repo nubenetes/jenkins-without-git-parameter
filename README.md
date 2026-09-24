@@ -1405,6 +1405,20 @@ Architectural deep dives, video walkthroughs, and technical shorts for `jenkins-
 > • Scaling with ArgoCD 3.5+ ApplicationSets: Dynamically templating multi-environment clusters using Git and Matrix generators with dynamic branch tracking.
 > • Eliminating YAML Sprawl: How Git and ArgoCD solve parameterization natively without Jenkins parameter plugins.
 
+##### Jenkins Pure GitOps: Decoupling CI from ArgoCD Multi-Cluster CD
+- 🔗 **Link**: [https://www.youtube.com/watch?v=qntcMvzBx4w](https://www.youtube.com/watch?v=qntcMvzBx4w)
+- 🌐 **Language**: English (Original Audio)
+- ⏱️ **Duration**: 7:52
+- 🏷️ **Domain**: CI/CD Decoupling, SCM Blind Spot & Pull-Based GitOps
+- 📝 **Full Description**:
+> 🚀 Architectural breakdown of the SCM pre-execution render paradox when using Jenkins git-parameter plugins across multiple repositories, and how shifting to a pure GitOps model permanently solves it.
+>
+> 📌 Core Discussion Points:
+> • The Pre-Execution Render Paradox: Why UI parameter dropdowns fail before checkout in multi-repo topologies.
+> • Jenkins as a Pure Build Factory: Compiling immutable containers, scanning with Trivy, and cryptographically signing with Cosign (SLSA Level 3).
+> • ArgoCD Multi-Cluster Synchronization: Replacing push deployment scripts with pull-based internal controllers.
+> • Dynamic Tuning without Throttling: Eliminating pod-level CPU limits to prevent Linux CFS bandwidth throttling on multi-threaded runtimes.
+
 </details>
 
 <details open>
@@ -1419,6 +1433,8 @@ Architectural deep dives, video walkthroughs, and technical shorts for `jenkins-
 | 1 | [How Multi Cluster GitOps Works](https://www.youtube.com/shorts/idLvUjllX04) | Hub-and-Spoke Topology | `1:07` | [▶️ Watch](https://www.youtube.com/shorts/idLvUjllX04) |
 | 2 | [How GitOps Secures Deployments](https://www.youtube.com/shorts/LcHLwrJ2950) | Pull vs Push Isolation | `1:06` | [▶️ Watch](https://www.youtube.com/shorts/LcHLwrJ2950) |
 | 3 | [CI CD GitOps OpenShift 4](https://www.youtube.com/watch?v=b2FyV4t19-g) | OpenShift 4.20+ Architecture | `7:16` | [▶️ Watch](https://www.youtube.com/watch?v=b2FyV4t19-g) |
+| 4 | [How Pure GitOps Reverses Deployments](https://www.youtube.com/shorts/0-NIxNk7cuM) | Pull Model vs Push Scripts | `1:12` | [▶️ Watch](https://www.youtube.com/shorts/0-NIxNk7cuM) |
+| 5 | [The Shift to Pure GitOps Deployments](https://www.youtube.com/shorts/iKTgIsbQCcQ) | Eliminating UI Deploy Buttons | `1:23` | [▶️ Watch](https://www.youtube.com/shorts/iKTgIsbQCcQ) |
 
 <br/>
 
@@ -1439,6 +1455,18 @@ Architectural deep dives, video walkthroughs, and technical shorts for `jenkins-
 - ⏱️ **Duration**: 7:16
 - 📝 **Full Description**:
 > 🚀 Análisis técnico detallado sobre cómo diseñar e implementar una estrategia de automatización GitOps empresarial sobre Red Hat OpenShift 4.20+, Buildah, Skopeo y ArgoCD.
+
+##### 4. How Pure GitOps Reverses Deployments
+- 🔗 **Link**: [https://www.youtube.com/shorts/0-NIxNk7cuM](https://www.youtube.com/shorts/0-NIxNk7cuM)
+- ⏱️ **Duration**: 1:12
+- 📝 **Full Description**:
+> 🚀 How GitOps completely inverts traditional deployment architecture: replacing fragile external push scripts with an internal ArgoCD controller pulling state from Git without exposing cluster credentials.
+
+##### 5. The Shift to Pure GitOps Deployments
+- 🔗 **Link**: [https://www.youtube.com/shorts/iKTgIsbQCcQ](https://www.youtube.com/shorts/iKTgIsbQCcQ)
+- ⏱️ **Duration**: 1:23
+- 📝 **Full Description**:
+> 🚀 Why leading platform engineering teams eliminate manual UI deploy buttons, moving from fragile multi-repo parameter dropdowns to webhook-triggered CI and pull-based ArgoCD synchronization.
 
 </details>
 
